@@ -1,8 +1,5 @@
 """Main TUI application."""
 
-from datetime import datetime
-from time import time
-
 from textual import on
 from textual.app import App, ComposeResult
 from textual.binding import Binding
