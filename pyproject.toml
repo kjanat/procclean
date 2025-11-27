@@ -1,29 +1,29 @@
+#:schema https://json.schemastore.org/pyproject.json
+#:tombi schema.strict = false
+
 [project]
 name = "procclean"
-dynamic = ["version"]
 description = "Interactive TUI for exploring and cleaning up processes - find orphans, memory hogs, and kill them"
 readme = "README.md"
-license = "MIT"
 requires-python = ">=3.14"
+license = "MIT"
 authors = [{ name = "kjanat" }]
-keywords = ["process", "memory", "cleanup", "tui", "terminal", "orphan", "kill"]
+keywords = ["cleanup", "kill", "memory", "orphan", "process", "terminal", "tui"]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Environment :: Console",
-    "Intended Audience :: Developers",
-    "Intended Audience :: System Administrators",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: POSIX :: Linux",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.14",
-    "Topic :: System :: Monitoring",
-    "Topic :: System :: Systems Administration",
-    "Topic :: Utilities",
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Intended Audience :: System Administrators",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: System :: Monitoring",
+  "Topic :: System :: Systems Administration",
+  "Topic :: Utilities",
 ]
-dependencies = [
-    "psutil>=7.1.3",
-    "textual>=6.6.0",
-]
+dependencies = ["psutil>=7.1.3", "textual>=6.6.0"]
+dynamic = ["version"]
 
 [project.urls]
 Homepage = "https://github.com/kjanat/procclean"
@@ -33,7 +33,7 @@ Repository = "https://github.com/kjanat/procclean"
 procclean = "procclean.app:main"
 
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = ["hatch-vcs", "hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.version]
