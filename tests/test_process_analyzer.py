@@ -140,7 +140,7 @@ class TestKillProcess:
         """Should use kill() when force=True."""
         with patch("psutil.Process") as mock_proc:
             mock_proc.return_value.kill.return_value = None
-            success, msg = kill_process(1234, force=True)
+            success, _msg = kill_process(1234, force=True)
             assert success is True
             mock_proc.return_value.kill.assert_called_once()
 
