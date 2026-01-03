@@ -59,19 +59,17 @@ def get_process_list(
     current_user = os.getlogin()
     filter_user = filter_user or current_user
 
-    for proc in psutil.process_iter(
-        [
-            "pid",
-            "name",
-            "cmdline",
-            "ppid",
-            "memory_info",
-            "cpu_percent",
-            "username",
-            "create_time",
-            "status",
-        ]
-    ):
+    for proc in psutil.process_iter([
+        "pid",
+        "name",
+        "cmdline",
+        "ppid",
+        "memory_info",
+        "cpu_percent",
+        "username",
+        "create_time",
+        "status",
+    ]):
         try:
             info = proc.info
             if info["username"] != filter_user:

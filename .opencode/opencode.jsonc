@@ -5,27 +5,27 @@
       "command": [
         ".venv/bin/ruff",
         "server",
-        "--preview"
+        "--preview",
       ],
       "extensions": [
         ".py",
         ".pyi",
-        ".ipynb"
+        ".ipynb",
       ],
     },
     "ty": {
       "command": [
         ".venv/bin/ty",
-        "server"
+        "server",
       ],
       "extensions": [
         ".py",
         ".pyi",
-        ".ipynb"
+        ".ipynb",
       ],
     },
     "pyright": {
-      "disabled": true
+      "disabled": true,
     },
   },
 }

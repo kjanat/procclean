@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Proxy script for running `uv run procclean`
+
+exec uv run procclean "$@"
