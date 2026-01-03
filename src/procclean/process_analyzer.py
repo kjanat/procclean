@@ -186,9 +186,79 @@ def get_memory_summary() -> dict:
     }
 
 
+# System library paths - executables here are system services
+SYSTEM_EXE_PATHS = ("/usr/lib", "/usr/libexec", "/lib")
+
+# Critical services in /usr/bin that should never be killed
+# (session managers, audio, shells, display, auth)
+CRITICAL_SERVICES = {
+    # Display/session
+    "gnome-shell",
+    "kwin",
+    "plasmashell",
+    "mutter",
+    # Audio
+    "pipewire",
+    "pipewire-pulse",
+    "wireplumber",
+    "pulseaudio",
+    # Remote sessions
+    "tmux: server",
+    "tmux",
+    "mosh-server",
+    # Shells
+    "zsh",
+    "-zsh",
+    "bash",
+    "-bash",
+    "ssh",
+    "sshd",
+    # System
+    "systemd",
+    "init",
+    "dbus-daemon",
+    "dbus-broker",
+    # Desktop services
+    "ibus-daemon",
+    "gjs",
+    "gnome-keyring-daemon",
+}
+
+
+def is_system_service(proc: ProcessInfo) -> bool:
+    """Check if process is a system service that shouldn't be killed.
+
+    Uses two heuristics:
+    1. Exe path in system directories (/usr/lib, /usr/libexec)
+    2. Name matches critical services list (shells, audio, display)
+    """
+    # Check exe path - most system services live in /usr/lib
+    try:
+        exe = psutil.Process(proc.pid).exe() or ""
+        if exe.startswith(SYSTEM_EXE_PATHS):
+            return True
+    except psutil.NoSuchProcess, psutil.AccessDenied:
+        pass
+
+    # Check critical services by name
+    return proc.name.lower() in {s.lower() for s in CRITICAL_SERVICES}
+
+
 def filter_orphans(procs: list[ProcessInfo]) -> list[ProcessInfo]:
     """Filter to only orphaned processes."""
     return [p for p in procs if p.is_orphan]
+
+
+def filter_killable(procs: list[ProcessInfo]) -> list[ProcessInfo]:
+    """Filter to orphaned processes that are safe to kill.
+
+    Returns processes that are:
+    - Orphaned (parent is init/systemd)
+    - Not running in tmux
+    - Not a system service (GNOME, pipewire, etc.)
+
+    """
+    return [p for p in procs if p.is_orphan_candidate and not is_system_service(p)]
 
 
 def filter_high_memory(

@@ -8,6 +8,7 @@ from importlib.metadata import version
 from .formatters import format_output, get_available_columns
 from .process_analyzer import (
     filter_high_memory,
+    filter_killable,
     filter_orphans,
     find_similar_processes,
     get_memory_summary,
@@ -21,10 +22,12 @@ def cmd_list(args: argparse.Namespace) -> int:
     """List processes command."""
     procs = get_process_list(min_memory_mb=args.min_memory)
 
-    # Apply filters
-    if args.orphans:
+    # Apply filters (--filter or shorthand flags)
+    if args.filter == "killable" or args.killable:
+        procs = filter_killable(procs)
+    elif args.filter == "orphans" or args.orphans:
         procs = filter_orphans(procs)
-    if args.high_memory:
+    elif args.filter == "high-memory" or args.high_memory:
         procs = filter_high_memory(procs, threshold_mb=args.high_memory_threshold)
 
     # Apply sorting
@@ -153,16 +156,28 @@ def create_parser() -> argparse.ArgumentParser:
         help="Sort ascending instead of descending",
     )
     list_parser.add_argument(
+        "-F",
+        "--filter",
+        choices=["killable", "orphans", "high-memory"],
+        help="Filter preset: killable (orphans, not tmux, not system), orphans, high-memory",
+    )
+    list_parser.add_argument(
+        "-k",
+        "--killable",
+        action="store_true",
+        help="Shorthand for --filter killable",
+    )
+    list_parser.add_argument(
         "-o",
         "--orphans",
         action="store_true",
-        help="Show only orphaned processes",
+        help="Shorthand for --filter orphans",
     )
     list_parser.add_argument(
         "-m",
         "--high-memory",
         action="store_true",
-        help="Show only high memory processes",
+        help="Shorthand for --filter high-memory",
     )
     list_parser.add_argument(
         "--high-memory-threshold",

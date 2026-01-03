@@ -150,6 +150,25 @@ class TestCmdList:
         mock_filter.assert_called_once_with(sample_processes)
 
     @patch("procclean.cli.get_process_list")
+    @patch("procclean.cli.filter_killable")
+    @patch("procclean.cli.sort_processes")
+    @patch("procclean.cli.format_output")
+    def test_filters_killable(
+        self, mock_format, mock_sort, mock_filter, mock_get_procs, sample_processes
+    ):
+        """Should apply killable filter when -k flag set."""
+        mock_get_procs.return_value = sample_processes
+        mock_filter.return_value = sample_processes[:1]
+        mock_sort.return_value = sample_processes[:1]
+        mock_format.return_value = ""
+
+        parser = create_parser()
+        args = parser.parse_args(["list", "-k"])
+        cmd_list(args)
+
+        mock_filter.assert_called_once_with(sample_processes)
+
+    @patch("procclean.cli.get_process_list")
     @patch("procclean.cli.filter_high_memory")
     @patch("procclean.cli.sort_processes")
     @patch("procclean.cli.format_output")

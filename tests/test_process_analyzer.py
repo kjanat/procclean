@@ -6,13 +6,17 @@ import psutil
 import pytest
 
 from procclean.process_analyzer import (
+    CRITICAL_SERVICES,
+    SYSTEM_EXE_PATHS,
     filter_high_memory,
+    filter_killable,
     filter_orphans,
     find_similar_processes,
     get_cwd,
     get_memory_summary,
     get_process_list,
     get_tmux_env,
+    is_system_service,
     kill_process,
     kill_processes,
     sort_processes,
@@ -715,3 +719,111 @@ class TestSortProcesses:
         """Should default to memory for unknown sort key."""
         result = sort_processes(sample_processes, sort_by="unknown", reverse=True)
         assert result[0].rss_mb >= result[-1].rss_mb
+
+
+class TestIsSystemService:
+    """Tests for is_system_service function."""
+
+    def test_critical_service_by_name(self, make_process):
+        """Should identify critical services by name."""
+        for name in ["pipewire", "gnome-shell", "tmux: server", "zsh", "-bash"]:
+            proc = make_process(name=name)
+            assert is_system_service(proc) is True
+
+    def test_case_insensitive_matching(self, make_process):
+        """Should match critical services case-insensitively."""
+        proc = make_process(name="PIPEWIRE")
+        assert is_system_service(proc) is True
+
+    @patch("psutil.Process")
+    def test_system_exe_path(self, mock_process, make_process):
+        """Should identify system services by exe path."""
+        mock_process.return_value.exe.return_value = "/usr/lib/gsd-color"
+        proc = make_process(name="gsd-color")
+        assert is_system_service(proc) is True
+
+    @patch("psutil.Process")
+    def test_user_exe_path(self, mock_process, make_process):
+        """Should not flag user apps in /usr/bin."""
+        mock_process.return_value.exe.return_value = "/usr/bin/firefox"
+        proc = make_process(name="firefox")
+        assert is_system_service(proc) is False
+
+    @patch("psutil.Process")
+    def test_handles_no_such_process(self, mock_process, make_process):
+        """Should handle NoSuchProcess gracefully."""
+        mock_process.return_value.exe.side_effect = psutil.NoSuchProcess(1234)
+        proc = make_process(name="firefox")
+        assert is_system_service(proc) is False
+
+    @patch("psutil.Process")
+    def test_handles_access_denied(self, mock_process, make_process):
+        """Should handle AccessDenied gracefully."""
+        mock_process.return_value.exe.side_effect = psutil.AccessDenied(1234)
+        proc = make_process(name="unknown")
+        assert is_system_service(proc) is False
+
+
+class TestFilterKillable:
+    """Tests for filter_killable function."""
+
+    @patch("procclean.process_analyzer.is_system_service")
+    def test_filters_non_orphans(self, mock_is_system, make_process):
+        """Should exclude non-orphaned processes."""
+        mock_is_system.return_value = False
+        procs = [
+            make_process(pid=1, is_orphan=True, in_tmux=False),
+            make_process(pid=2, is_orphan=False, in_tmux=False),
+        ]
+        result = filter_killable(procs)
+        assert len(result) == 1
+        assert result[0].pid == 1
+
+    @patch("procclean.process_analyzer.is_system_service")
+    def test_filters_tmux_processes(self, mock_is_system, make_process):
+        """Should exclude processes in tmux."""
+        mock_is_system.return_value = False
+        procs = [
+            make_process(pid=1, is_orphan=True, in_tmux=False),
+            make_process(pid=2, is_orphan=True, in_tmux=True),
+        ]
+        result = filter_killable(procs)
+        assert len(result) == 1
+        assert result[0].pid == 1
+
+    @patch("procclean.process_analyzer.is_system_service")
+    def test_filters_system_services(self, mock_is_system, make_process):
+        """Should exclude system services."""
+        mock_is_system.side_effect = lambda p: p.name == "pipewire"
+        procs = [
+            make_process(pid=1, name="firefox", is_orphan=True, in_tmux=False),
+            make_process(pid=2, name="pipewire", is_orphan=True, in_tmux=False),
+        ]
+        result = filter_killable(procs)
+        assert len(result) == 1
+        assert result[0].name == "firefox"
+
+    @patch("procclean.process_analyzer.is_system_service")
+    def test_returns_empty_when_all_filtered(self, mock_is_system, make_process):
+        """Should return empty list when all processes are filtered."""
+        mock_is_system.return_value = True
+        procs = [make_process(is_orphan=True, in_tmux=False)]
+        result = filter_killable(procs)
+        assert result == []
+
+
+class TestConstants:
+    """Tests for module constants."""
+
+    def test_system_exe_paths_tuple(self):
+        """SYSTEM_EXE_PATHS should be a tuple of paths."""
+        assert isinstance(SYSTEM_EXE_PATHS, tuple)
+        assert "/usr/lib" in SYSTEM_EXE_PATHS
+        assert "/usr/libexec" in SYSTEM_EXE_PATHS
+
+    def test_critical_services_set(self):
+        """CRITICAL_SERVICES should be a set with expected entries."""
+        assert isinstance(CRITICAL_SERVICES, set)
+        assert "pipewire" in CRITICAL_SERVICES
+        assert "gnome-shell" in CRITICAL_SERVICES
+        assert "tmux: server" in CRITICAL_SERVICES
