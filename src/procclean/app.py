@@ -1,5 +1,8 @@
 """Main TUI application."""
 
+import argparse
+from importlib.metadata import version
+
 from textual import on
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -362,6 +365,18 @@ class ProcessCleanerApp(App):
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        prog="procclean",
+        description="TUI for exploring and cleaning up processes.",
+    )
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=f"%(prog)s {version('procclean')}",
+    )
+    parser.parse_args()
+
     app = ProcessCleanerApp()
     app.run()
 
