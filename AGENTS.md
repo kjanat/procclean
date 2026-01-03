@@ -3,12 +3,14 @@
 ## Commands
 
 - **Install deps**: `uv sync`
-- **Run app**: `uv run procclean`
+- **Run app**: `uv run procclean` or `./pc`
 - **Lint**: `uv run ruff check src/` and `uv run ruff format --check src/`
 - **Type check**: `uv run ty check`
 - **Test all**: `uv run pytest`
 - **Single test**: `uv run pytest tests/test_file.py::test_name -v`
 - **Test coverage (verbose)**: `uv run pytest --cov -vv`
+- **Pre-commit install**: `uv run pre-commit install --install-hooks`
+- **Run hooks manually**: `uv run pre-commit run --all-files`
 
 ## Code Style
 

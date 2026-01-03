@@ -58,6 +58,21 @@ procclean
 - Python 3.14+
 - Linux (uses `/proc` filesystem)
 
+## Development
+
+```bash
+git clone https://github.com/kjanat/procclean
+cd procclean
+uv sync
+uv run pre-commit install
+```
+
+Run tests:
+
+```bash
+uv run pytest
+```
+
 ## License
 
 MIT
