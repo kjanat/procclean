@@ -5,7 +5,7 @@ import json
 import sys
 from importlib.metadata import version
 
-from .formatters import format_output
+from .formatters import format_output, get_available_columns
 from .process_analyzer import (
     filter_high_memory,
     filter_orphans,
@@ -35,7 +35,10 @@ def cmd_list(args: argparse.Namespace) -> int:
     if args.limit:
         procs = procs[: args.limit]
 
-    print(format_output(procs, args.format))
+    # Parse columns
+    columns = args.columns.split(",") if args.columns else None
+
+    print(format_output(procs, args.format, columns=columns))
     return 0
 
 
@@ -181,6 +184,13 @@ def create_parser() -> argparse.ArgumentParser:
         type=int,
         metavar="N",
         help="Limit output to N processes",
+    )
+    list_parser.add_argument(
+        "-c",
+        "--columns",
+        type=str,
+        metavar="COLS",
+        help=f"Comma-separated columns ({','.join(get_available_columns())})",
     )
     list_parser.set_defaults(func=cmd_list)
 

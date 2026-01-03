@@ -3,63 +3,131 @@
 import csv
 import io
 import json
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass
+
+from tabulate import tabulate
 
 from .process_analyzer import ProcessInfo
 
-DEFAULT_COLUMNS = ("pid", "name", "rss_mb", "cpu_percent", "cwd", "ppid", "status")
-COLUMN_HEADERS = {
-    "pid": "PID",
-    "name": "Name",
-    "rss_mb": "RAM (MB)",
-    "cpu_percent": "CPU%",
-    "cwd": "CWD",
-    "ppid": "PPID",
-    "parent_name": "Parent",
-    "status": "Status",
-    "cmdline": "Command",
-    "username": "User",
+
+def clip_right(s: str, max_len: int) -> str:
+    """Truncate string from right, keeping left portion."""
+    return s if len(s) <= max_len else s[:max_len]
+
+
+def clip_left(s: str, max_len: int) -> str:
+    """Truncate string from left, keeping right portion with ellipsis."""
+    return s if len(s) <= max_len else "..." + s[-(max_len - 3) :]
+
+
+def fmt_float1(v: object) -> str:
+    """Format as float with 1 decimal."""
+    return f"{float(v):.1f}"  # type: ignore[arg-type]
+
+
+def fmt_status(p: ProcessInfo) -> str:
+    """Format status with optional markers."""
+    status = p.status
+    if p.is_orphan:
+        status += " [orphan]"
+    if p.in_tmux:
+        status += " [tmux]"
+    return status
+
+
+@dataclass(frozen=True)
+class ColumnSpec:
+    """Specification for a table column."""
+
+    key: str
+    header: str
+    get: Callable[[ProcessInfo], object]
+    fmt: Callable[[object], str] = str
+    max_width: int | None = None
+
+    def extract(self, proc: ProcessInfo) -> str:
+        """Extract and format value from process."""
+        raw = self.get(proc)
+        formatted = self.fmt(raw)
+        if self.max_width and len(formatted) > self.max_width:
+            # Use clip_left for paths (cwd), clip_right for names
+            if self.key == "cwd":
+                return clip_left(formatted, self.max_width)
+            return clip_right(formatted, self.max_width)
+        return formatted
+
+
+# Column definitions - single source of truth
+COLUMNS: dict[str, ColumnSpec] = {
+    "pid": ColumnSpec("pid", "PID", lambda p: p.pid),
+    "name": ColumnSpec("name", "Name", lambda p: p.name, max_width=25),
+    "rss_mb": ColumnSpec("rss_mb", "RAM (MB)", lambda p: p.rss_mb, fmt_float1),
+    "cpu_percent": ColumnSpec(
+        "cpu_percent", "CPU%", lambda p: p.cpu_percent, fmt_float1
+    ),
+    "cwd": ColumnSpec("cwd", "CWD", lambda p: p.cwd, max_width=40),
+    "ppid": ColumnSpec("ppid", "PPID", lambda p: p.ppid),
+    "parent_name": ColumnSpec(
+        "parent_name", "Parent", lambda p: p.parent_name, max_width=15
+    ),
+    "status": ColumnSpec("status", "Status", fmt_status),
+    "cmdline": ColumnSpec("cmdline", "Command", lambda p: p.cmdline, max_width=60),
+    "username": ColumnSpec("username", "User", lambda p: p.username),
 }
 
+DEFAULT_COLUMNS: tuple[str, ...] = (
+    "pid",
+    "name",
+    "rss_mb",
+    "cpu_percent",
+    "cwd",
+    "ppid",
+    "status",
+)
 
-def _format_cell(col: str, val: object) -> str:
-    """Format a single cell value for table output."""
-    if col in ("rss_mb", "cpu_percent"):
-        return f"{val:.1f}"
-    if col == "cwd" and len(str(val)) > 40:
-        return "..." + str(val)[-37:]
-    if col == "name" and len(str(val)) > 25:
-        return str(val)[:25]
-    return str(val)
+
+def get_rows(
+    procs: list[ProcessInfo],
+    columns: Sequence[str] | None = None,
+) -> tuple[list[str], list[list[str]]]:
+    """Extract headers and formatted rows from processes.
+
+    Args:
+        procs: List of processes
+        columns: Column keys to include (default: DEFAULT_COLUMNS)
+
+    Returns:
+        Tuple of (headers, rows)
+
+    """
+    cols = columns or DEFAULT_COLUMNS
+    specs = [COLUMNS[c] for c in cols if c in COLUMNS]
+    headers = [s.header for s in specs]
+    rows = [[s.extract(p) for s in specs] for p in procs]
+    return headers, rows
 
 
-def format_table(procs: list[ProcessInfo], columns: Sequence[str] | None = None) -> str:
+def format_table(
+    procs: list[ProcessInfo],
+    columns: Sequence[str] | None = None,
+) -> str:
     """Format processes as ASCII table."""
     if not procs:
         return "No processes found."
+    headers, rows = get_rows(procs, columns)
+    return tabulate(rows, headers=headers, tablefmt="simple_outline")
 
-    cols = columns or DEFAULT_COLUMNS
-    header_row = [COLUMN_HEADERS.get(c, c) for c in cols]
-    rows = [[_format_cell(col, getattr(p, col, "")) for col in cols] for p in procs]
 
-    # Calculate column widths
-    widths = [len(h) for h in header_row]
-    for row in rows:
-        for i, cell in enumerate(row):
-            widths[i] = max(widths[i], len(cell))
-
-    # Format output
-    sep = "+" + "+".join("-" * (w + 2) for w in widths) + "+"
-    header_line = (
-        "|" + "|".join(f" {h:<{widths[i]}} " for i, h in enumerate(header_row)) + "|"
-    )
-    lines = [sep, header_line, sep]
-    lines.extend(
-        "|" + "|".join(f" {c:<{widths[i]}} " for i, c in enumerate(row)) + "|"
-        for row in rows
-    )
-    lines.append(sep)
-    return "\n".join(lines)
+def format_markdown(
+    procs: list[ProcessInfo],
+    columns: Sequence[str] | None = None,
+) -> str:
+    """Format processes as GitHub-flavored Markdown table."""
+    if not procs:
+        return "No processes found."
+    headers, rows = get_rows(procs, columns)
+    return tabulate(rows, headers=headers, tablefmt="pipe")
 
 
 def format_json(procs: list[ProcessInfo]) -> str:
@@ -122,37 +190,28 @@ def format_csv(procs: list[ProcessInfo]) -> str:
     return output.getvalue()
 
 
-def format_markdown(procs: list[ProcessInfo]) -> str:
-    """Format processes as Markdown table."""
-    if not procs:
-        return "No processes found."
+def format_output(
+    procs: list[ProcessInfo],
+    fmt: str,
+    columns: Sequence[str] | None = None,
+) -> str:
+    """Format processes in requested format.
 
-    lines = [
-        "| PID | Name | RAM (MB) | CPU% | CWD | PPID | Status |",
-        "|-----|------|----------|------|-----|------|--------|",
-    ]
-    for p in procs:
-        cwd = p.cwd if len(p.cwd) <= 30 else "..." + p.cwd[-27:]
-        name = p.name if len(p.name) <= 20 else p.name[:20]
-        status = p.status
-        if p.is_orphan:
-            status += " [orphan]"
-        if p.in_tmux:
-            status += " [tmux]"
-        lines.append(
-            f"| {p.pid} | {name} | {p.rss_mb:.1f} | {p.cpu_percent:.1f} | {cwd} | {p.ppid} | {status} |"
-        )
-    return "\n".join(lines)
+    Args:
+        procs: List of processes
+        fmt: Output format (table, json, csv, md/markdown)
+        columns: Column keys for table/md formats
+
+    """
+    if fmt == "json":
+        return format_json(procs)
+    if fmt == "csv":
+        return format_csv(procs)
+    if fmt in ("md", "markdown"):
+        return format_markdown(procs, columns)
+    return format_table(procs, columns)
 
 
-def format_output(procs: list[ProcessInfo], fmt: str) -> str:
-    """Format processes in requested format."""
-    formatters = {
-        "table": format_table,
-        "json": format_json,
-        "csv": format_csv,
-        "md": format_markdown,
-        "markdown": format_markdown,
-    }
-    formatter = formatters.get(fmt, format_table)
-    return formatter(procs)
+def get_available_columns() -> list[str]:
+    """Return list of available column keys."""
+    return list(COLUMNS.keys())
