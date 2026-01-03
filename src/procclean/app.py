@@ -1,8 +1,5 @@
 """Main TUI application."""
 
-import argparse
-from importlib.metadata import version
-
 from textual import on
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -75,7 +72,7 @@ class ConfirmKillScreen(ModalScreen[bool]):
         self.dismiss(False)
 
 
-class ProcessCleanerApp(App):
+class ProcessCleanerApp(App):  # noqa: PLR0904
     """TUI for exploring and cleaning up processes."""
 
     CSS = """
@@ -177,6 +174,12 @@ class ProcessCleanerApp(App):
         Binding("space", "toggle_select", "Select"),
         Binding("s", "select_all_visible", "Select All"),
         Binding("c", "clear_selection", "Clear"),
+        # Sorting bindings
+        Binding("1", "sort_memory", "Sort:Mem"),
+        Binding("2", "sort_cpu", "Sort:CPU"),
+        Binding("3", "sort_pid", "Sort:PID"),
+        Binding("4", "sort_name", "Sort:Name"),
+        Binding("!", "toggle_sort_order", "Reverse"),
     ]
 
     def __init__(self):
@@ -185,6 +188,8 @@ class ProcessCleanerApp(App):
         self.selected_pids: set[int] = set()
         self.current_view = "all"
         self.status_message = ""
+        self.sort_key = "memory"  # memory, cpu, pid, name
+        self.sort_reverse = True  # descending by default
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -235,8 +240,19 @@ class ProcessCleanerApp(App):
         self.processes = get_process_list(min_memory_mb=5.0)
         self.update_table()
 
+    def _sort_processes(self, procs: list[ProcessInfo]) -> list[ProcessInfo]:
+        """Sort processes by current sort key and order."""
+        sort_keys = {
+            "memory": lambda p: p.rss_mb,
+            "cpu": lambda p: p.cpu_percent,
+            "pid": lambda p: p.pid,
+            "name": lambda p: p.name.lower(),
+        }
+        key_func = sort_keys.get(self.sort_key, sort_keys["memory"])
+        return sorted(procs, key=key_func, reverse=self.sort_reverse)
+
     def update_table(self) -> None:
-        """Update the process table based on current view."""
+        """Update the process table based on current view and sort."""
         table = self.query_one("#process-table", DataTable)
         table.clear()
 
@@ -251,6 +267,9 @@ class ProcessCleanerApp(App):
                 procs.extend(group_procs)
         else:
             procs = self.processes
+
+        # Apply sorting
+        procs = self._sort_processes(procs)
 
         for proc in procs:
             selected = "[X]" if proc.pid in self.selected_pids else "[ ]"
@@ -339,6 +358,37 @@ class ProcessCleanerApp(App):
         self.current_view = "groups"
         self.update_table()
 
+    def _set_sort(self, key: str) -> None:
+        """Set sort key and update table."""
+        if self.sort_key == key:
+            # Same key, toggle order
+            self.sort_reverse = not self.sort_reverse
+        else:
+            self.sort_key = key
+            # Default order: descending for numeric, ascending for name
+            self.sort_reverse = key != "name"
+        order = "desc" if self.sort_reverse else "asc"
+        self.status_message = f"Sort: {key} ({order})"
+        self.update_table()
+
+    def action_sort_memory(self) -> None:
+        self._set_sort("memory")
+
+    def action_sort_cpu(self) -> None:
+        self._set_sort("cpu")
+
+    def action_sort_pid(self) -> None:
+        self._set_sort("pid")
+
+    def action_sort_name(self) -> None:
+        self._set_sort("name")
+
+    def action_toggle_sort_order(self) -> None:
+        self.sort_reverse = not self.sort_reverse
+        order = "desc" if self.sort_reverse else "asc"
+        self.status_message = f"Sort: {self.sort_key} ({order})"
+        self.update_table()
+
     def _do_kill(self, force: bool = False) -> None:
         if not self.selected_pids:
             self.status_message = "No processes selected"
@@ -365,20 +415,21 @@ class ProcessCleanerApp(App):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        prog="procclean",
-        description="TUI for exploring and cleaning up processes.",
-    )
-    parser.add_argument(
-        "-v",
-        "--version",
-        action="version",
-        version=f"%(prog)s {version('procclean')}",
-    )
-    parser.parse_args()
+    """Entry point: dispatch to CLI or run TUI.
 
-    app = ProcessCleanerApp()
-    app.run()
+    Raises:
+        SystemExit: When CLI command returns non-zero exit code.
+
+    """
+    from .cli import run_cli  # noqa: PLC0415
+
+    result = run_cli()
+    if result == -1:
+        # No subcommand - run TUI
+        app = ProcessCleanerApp()
+        app.run()
+    else:
+        raise SystemExit(result)
 
 
 if __name__ == "__main__":

@@ -184,3 +184,39 @@ def get_memory_summary() -> dict:
         "swap_used_gb": swap.used / 1024**3,
         "swap_total_gb": swap.total / 1024**3,
     }
+
+
+def filter_orphans(procs: list[ProcessInfo]) -> list[ProcessInfo]:
+    """Filter to only orphaned processes."""
+    return [p for p in procs if p.is_orphan]
+
+
+def filter_high_memory(
+    procs: list[ProcessInfo], threshold_mb: float = 500.0
+) -> list[ProcessInfo]:
+    """Filter to processes using more than threshold memory."""
+    return [p for p in procs if p.rss_mb > threshold_mb]
+
+
+def sort_processes(
+    procs: list[ProcessInfo],
+    sort_by: str = "memory",
+    reverse: bool = True,
+) -> list[ProcessInfo]:
+    """Sort processes by given key.
+
+    Args:
+        procs: List of processes to sort
+        sort_by: One of 'memory', 'cpu', 'pid', 'name'
+        reverse: If True, sort descending (default for numeric)
+
+    """
+    sort_keys = {
+        "memory": lambda p: p.rss_mb,
+        "mem": lambda p: p.rss_mb,
+        "cpu": lambda p: p.cpu_percent,
+        "pid": lambda p: p.pid,
+        "name": lambda p: p.name.lower(),
+    }
+    key_func = sort_keys.get(sort_by, sort_keys["memory"])
+    return sorted(procs, key=key_func, reverse=reverse)

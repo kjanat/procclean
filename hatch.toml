@@ -1,9 +1,0 @@
-#:schema https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/hatch.json
-#:tombi schema.strict = true
-
-[version]
-source = "vcs"
-fallback-version = "0.1.0"
-
-[build.targets.wheel]
-packages = ["src/procclean"]
