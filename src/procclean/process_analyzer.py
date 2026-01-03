@@ -36,7 +36,7 @@ def get_tmux_env(pid: int) -> bool:
         if environ_path.exists():
             environ = environ_path.read_bytes().decode("utf-8", errors="ignore")
             return "TMUX=" in environ
-    except (PermissionError, FileNotFoundError, ProcessLookupError):
+    except PermissionError, FileNotFoundError, ProcessLookupError:
         pass
     return False
 
@@ -45,7 +45,7 @@ def get_cwd(pid: int) -> str:
     """Get process working directory."""
     try:
         return os.readlink(f"/proc/{pid}/cwd")
-    except (PermissionError, FileNotFoundError, ProcessLookupError):
+    except PermissionError, FileNotFoundError, ProcessLookupError:
         return "?"
 
 
@@ -85,7 +85,7 @@ def get_process_list(
             try:
                 parent = psutil.Process(ppid)
                 parent_name = parent.name()
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
+            except psutil.NoSuchProcess, psutil.AccessDenied:
                 parent_name = "?"
 
             # Check if orphaned (parent is init/systemd)
@@ -112,7 +112,7 @@ def get_process_list(
                     status=info["status"] or "?",
                 )
             )
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+        except psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess:
             continue
 
     if sort_by == "memory":

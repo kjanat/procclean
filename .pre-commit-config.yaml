@@ -1,0 +1,76 @@
+# yaml-language-server: $schema=https://www.schemastore.org/pre-commit-config.json
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+---
+default_stages: [pre-commit, pre-push]
+ci:
+  autofix_prs: true
+  autoupdate_schedule: weekly
+  submodules: false
+  skip: [toml-format-online, toml-lint-online, dprint-staged]
+fail_fast: false
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      # ---- Formatting / Cleanup ----
+      - id: end-of-file-fixer
+      - id: fix-byte-order-marker
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+
+      # ---- File / Content Validation ----
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-illegal-windows-names
+      - id: check-shebang-scripts-are-executable
+      - id: check-symlinks
+      - id: check-toml
+      - id: check-vcs-permalinks
+      - id: check-xml
+      # - id: check-yaml
+      - id: destroyed-symlinks
+      - id: name-tests-test
+        args: [--pytest-test-first]
+
+      # ---- Security-ish ----
+      - id: detect-private-key
+
+  - repo: https://github.com/tombi-toml/tombi-pre-commit
+    rev: v0.7.14
+    hooks:
+      - id: tombi-format
+        alias: toml-format-online
+      - id: tombi-lint
+        alias: toml-lint-online
+      - id: tombi-format
+        alias: toml-format-offline
+        args: ["--offline"]
+      - id: tombi-lint
+        alias: toml-lint-offline
+        args: ["--offline"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.14.10
+    hooks:
+      # Run the linter.
+      - id: ruff-check
+        args: [--fix]
+      # Run the formatter.
+      - id: ruff-format
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    # uv version.
+    rev: 0.9.21
+    hooks:
+      - id: uv-lock
+
+  - repo: local
+    hooks:
+      - id: dprint-staged
+        name: dprint (staged)
+        entry: dprint fmt --staged
+        language: system
+        pass_filenames: false
