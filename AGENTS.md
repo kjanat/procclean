@@ -18,12 +18,46 @@
 ## Code Style
 
 - Python 3.14+, use modern type syntax: `list[X]`, `dict[K,V]`, `X | None`
+  - Make sure to actually exploit new features. See [Python 3.14 whatsnew]
 - Imports: `stdlib` first, third-party, then relative (`.module`)
 - Format: `ruff` (88 char line length, double quotes)
 - `Dataclasses` for data structures, not `dicts`
 - Docstrings: triple-quoted, first line is summary
 - Error handling: catch specific exceptions (`psutil.NoSuchProcess`, etc.)
 - Naming: `snake_case` functions/vars, `PascalCase` classes
+
+### Python 3.14
+
+#### Template Strings (t-strings)
+
+```python
+name = "value"
+template = t"Hello {name}"  # Returns Template object, not str
+# Use for safe SQL/HTML/shell interpolation
+```
+
+#### Deferred Annotations
+
+- Forward references work without quotes: `def foo(x: SomeClass)` just works
+- Use
+  `annotationlib.get_annotations(obj, format=Format.VALUE|FORWARDREF|STRING)`
+
+#### Multiple Interpreters
+
+```python
+from concurrent.interpreters import Interpreter
+from concurrent.futures import InterpreterPoolExecutor
+# True parallelism, no GIL, isolated memory
+```
+
+#### Other Changes
+
+- `except ValueError, TypeError:` → brackets optional
+- `compression.zstd` → Zstandard support
+- REPL has syntax highlighting
+- Free-threaded mode officially supported
+
+[Python 3.14 whatsnew]: https://docs.python.org/3/whatsnew/3.14.html "What’s new in Python 3.14"
 
 ## Structure
 

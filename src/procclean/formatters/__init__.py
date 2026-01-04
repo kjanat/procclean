@@ -3,11 +3,9 @@
 from .columns import (
     COLUMNS,
     DEFAULT_COLUMNS,
+    ClipSide,
     ColumnSpec,
-    clip_left,
-    clip_right,
-    fmt_float1,
-    fmt_status,
+    clip,
     get_available_columns,
 )
 from .output import (
@@ -22,11 +20,9 @@ from .output import (
 __all__ = [
     "COLUMNS",
     "DEFAULT_COLUMNS",
+    "ClipSide",
     "ColumnSpec",
-    "clip_left",
-    "clip_right",
-    "fmt_float1",
-    "fmt_status",
+    "clip",
     "format_csv",
     "format_json",
     "format_markdown",

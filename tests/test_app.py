@@ -530,8 +530,8 @@ class TestConfirmKillScreen:
 class TestMainFunction:
     """Tests for main entry point."""
 
-    @patch("procclean.cli.run_cli")
-    @patch("procclean.tui.ProcessCleanerApp")
+    @patch("procclean.__main__.run_cli")
+    @patch("procclean.__main__.ProcessCleanerApp")
     def test_runs_tui_when_no_subcommand(self, mock_app_class, mock_run_cli):
         """Should run TUI when run_cli returns -1."""
         mock_run_cli.return_value = -1
@@ -541,7 +541,7 @@ class TestMainFunction:
 
         mock_app.run.assert_called_once()
 
-    @patch("procclean.cli.run_cli")
+    @patch("procclean.__main__.run_cli")
     def test_exits_with_code_from_cli(self, mock_run_cli):
         """Should raise SystemExit with CLI return code."""
         mock_run_cli.return_value = 1

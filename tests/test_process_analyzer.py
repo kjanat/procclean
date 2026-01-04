@@ -578,7 +578,7 @@ class TestKillProcesses:
 
     def test_kills_multiple_processes(self):
         """Should return results for each PID."""
-        with patch("procclean.core.process.kill_process") as mock_kill:
+        with patch("procclean.core.actions.kill_process") as mock_kill:
             mock_kill.side_effect = [
                 (True, "killed"),
                 (False, "not found"),
@@ -768,7 +768,7 @@ class TestIsSystemService:
 class TestFilterKillable:
     """Tests for filter_killable function."""
 
-    @patch("procclean.core.process.is_system_service")
+    @patch("procclean.core.filters.is_system_service")
     def test_filters_non_orphans(self, mock_is_system, make_process):
         """Should exclude non-orphaned processes."""
         mock_is_system.return_value = False
@@ -780,7 +780,7 @@ class TestFilterKillable:
         assert len(result) == 1
         assert result[0].pid == 1
 
-    @patch("procclean.core.process.is_system_service")
+    @patch("procclean.core.filters.is_system_service")
     def test_filters_tmux_processes(self, mock_is_system, make_process):
         """Should exclude processes in tmux."""
         mock_is_system.return_value = False
@@ -792,7 +792,7 @@ class TestFilterKillable:
         assert len(result) == 1
         assert result[0].pid == 1
 
-    @patch("procclean.core.process.is_system_service")
+    @patch("procclean.core.filters.is_system_service")
     def test_filters_system_services(self, mock_is_system, make_process):
         """Should exclude system services."""
         mock_is_system.side_effect = lambda p: p.name == "pipewire"
@@ -804,7 +804,7 @@ class TestFilterKillable:
         assert len(result) == 1
         assert result[0].name == "firefox"
 
-    @patch("procclean.core.process.is_system_service")
+    @patch("procclean.core.filters.is_system_service")
     def test_returns_empty_when_all_filtered(self, mock_is_system, make_process):
         """Should return empty list when all processes are filtered."""
         mock_is_system.return_value = True

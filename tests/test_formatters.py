@@ -3,16 +3,13 @@
 import csv
 import io
 import json
-import math
 
 from procclean.formatters import (
     COLUMNS,
     DEFAULT_COLUMNS,
+    ClipSide,
     ColumnSpec,
-    clip_left,
-    clip_right,
-    fmt_float1,
-    fmt_status,
+    clip,
     format_csv,
     format_json,
     format_markdown,
@@ -23,76 +20,34 @@ from procclean.formatters import (
 )
 
 
-class TestClipRight:
-    """Tests for clip_right function."""
+class TestClip:
+    """Tests for clip function."""
 
     def test_no_truncation_when_short(self):
         """Should return unchanged string when shorter than max."""
-        assert clip_right("hello", 10) == "hello"
+        assert clip("hello", 10) == "hello"
 
-    def test_truncates_from_right(self):
-        """Should truncate keeping left portion."""
-        assert clip_right("hello world", 5) == "hello"
-
-    def test_exact_length(self):
+    def test_exact_length_no_truncation(self):
         """Should return unchanged when exactly max length."""
-        assert clip_right("hello", 5) == "hello"
+        assert clip("hello", 5) == "hello"
 
+    def test_clips_right_by_default(self):
+        """Should truncate keeping left portion with ellipsis on right."""
+        result = clip("hello world", 8)
+        assert result == "hello..."
+        assert len(result) == 8
 
-class TestClipLeft:
-    """Tests for clip_left function."""
-
-    def test_no_truncation_when_short(self):
-        """Should return unchanged string when shorter than max."""
-        assert clip_left("hello", 10) == "hello"
-
-    def test_truncates_from_left_with_ellipsis(self):
-        """Should truncate keeping right portion with ellipsis."""
-        result = clip_left("/very/long/path/to/file", 15)
+    def test_clips_left_when_specified(self):
+        """Should truncate keeping right portion with ellipsis on left."""
+        result = clip("/very/long/path/to/file", 15, ClipSide.LEFT)
         assert result == "...path/to/file"
         assert len(result) == 15
 
-    def test_exact_length(self):
-        """Should return unchanged when exactly max length."""
-        assert clip_left("hello", 5) == "hello"
-
-
-class TestFmtFloat1:
-    """Tests for fmt_float1 function."""
-
-    def test_formats_with_one_decimal(self):
-        """Should format float with 1 decimal place."""
-        assert fmt_float1(math.pi) == "3.1"
-        assert fmt_float1(100.0) == "100.0"
-        assert fmt_float1(0.04) == "0.0"  # rounds down
-
-    def test_handles_integers(self):
-        """Should handle integer input."""
-        assert fmt_float1(42) == "42.0"
-
-
-class TestFmtStatus:
-    """Tests for fmt_status function."""
-
-    def test_plain_status(self, make_process):
-        """Should return plain status when no markers."""
-        proc = make_process(status="running", is_orphan=False, in_tmux=False)
-        assert fmt_status(proc) == "running"
-
-    def test_orphan_marker(self, make_process):
-        """Should add orphan marker when is_orphan is True."""
-        proc = make_process(status="running", is_orphan=True, in_tmux=False)
-        assert fmt_status(proc) == "running [orphan]"
-
-    def test_tmux_marker(self, make_process):
-        """Should add tmux marker when in_tmux is True."""
-        proc = make_process(status="running", is_orphan=False, in_tmux=True)
-        assert fmt_status(proc) == "running [tmux]"
-
-    def test_both_markers(self, make_process):
-        """Should add both markers when both are True."""
-        proc = make_process(status="running", is_orphan=True, in_tmux=True)
-        assert fmt_status(proc) == "running [orphan] [tmux]"
+    def test_clips_right_when_specified(self):
+        """Should truncate keeping left portion when RIGHT specified."""
+        result = clip("hello world foo", 10, ClipSide.RIGHT)
+        assert result == "hello w..."
+        assert len(result) == 10
 
 
 class TestColumnSpec:
@@ -106,23 +61,42 @@ class TestColumnSpec:
 
     def test_extract_with_formatter(self, make_process):
         """Should apply formatter to value."""
-        spec = ColumnSpec("rss_mb", "RAM", lambda p: p.rss_mb, fmt_float1)
+        spec = ColumnSpec("rss_mb", "RAM", lambda p: p.rss_mb, lambda v: f"{v:.1f}")
         proc = make_process(rss_mb=123.456)
         assert spec.extract(proc) == "123.5"
 
     def test_extract_with_max_width_clips_right(self, make_process):
-        """Should clip non-cwd values from right."""
-        spec = ColumnSpec("name", "Name", lambda p: p.name, max_width=5)
+        """Should clip values from right by default."""
+        spec = ColumnSpec("name", "Name", lambda p: p.name, max_width=8)
         proc = make_process(name="very_long_name")
-        assert spec.extract(proc) == "very_"
+        assert spec.extract(proc) == "very_..."
 
-    def test_extract_cwd_clips_left(self, make_process):
-        """Should clip cwd values from left with ellipsis."""
-        spec = ColumnSpec("cwd", "CWD", lambda p: p.cwd, max_width=15)
+    def test_extract_with_clip_left(self, make_process):
+        """Should clip values from left when clip_side=LEFT."""
+        spec = ColumnSpec(
+            "cwd", "CWD", lambda p: p.cwd, max_width=15, clip_side=ClipSide.LEFT
+        )
         proc = make_process(cwd="/very/long/path/to/dir")
         result = spec.extract(proc)
         assert result.startswith("...")
         assert len(result) == 15
+
+    def test_with_width_returns_new_spec(self, make_process):
+        """with_width should return new ColumnSpec with updated width."""
+        original = ColumnSpec("name", "Name", lambda p: p.name)
+        modified = original.with_width(10, ClipSide.LEFT)
+
+        assert modified.max_width == 10
+        assert modified.clip_side == ClipSide.LEFT
+        assert original.max_width is None  # Original unchanged
+
+    def test_status_column_uses_process_object(self, make_process):
+        """Status column should format with markers."""
+        proc = make_process(status="running", is_orphan=True, in_tmux=True)
+        result = COLUMNS["status"].extract(proc)
+        assert "running" in result
+        assert "[orphan]" in result
+        assert "[tmux]" in result
 
 
 class TestGetRows:
@@ -306,3 +280,11 @@ class TestColumnsDefinitions:
             assert spec.key == key
             assert spec.header
             assert callable(spec.get)
+
+    def test_cwd_column_clips_left(self):
+        """CWD column should be configured to clip from left."""
+        assert COLUMNS["cwd"].clip_side == ClipSide.LEFT
+
+    def test_name_column_has_max_width(self):
+        """Name column should have max_width configured."""
+        assert COLUMNS["name"].max_width == 25
