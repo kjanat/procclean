@@ -133,3 +133,5 @@ uv run pytest
 <!--link definitions-->
 
 [license]: https://github.com/kjanat/procclean/blob/master/LICENSE "MIT License"
+
+<!--markdownlint-disable-file MD033 MD041-->

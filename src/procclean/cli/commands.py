@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from rich import print
+from rich import print  # pylint: disable=redefined-builtin
 
 from procclean.core import (
     PREVIEW_LIMIT,
@@ -189,7 +189,7 @@ def cmd_kill(args: argparse.Namespace) -> int:
 
     results = kill_processes([p.pid for p in procs], force=args.force)
     exit_code = 0
-    for _pid, success, msg in results:
+    for _, success, msg in results:
         status = "OK" if success else "FAILED"
         print(f"[{status}] {msg}")
         if not success:
