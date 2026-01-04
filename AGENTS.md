@@ -14,6 +14,15 @@
 - **Build**: `uv build`
 - **Show version**: `uv version` or `uv run procclean --version`
 - **Bump version**: `uv version --bump patch|minor|major`
+- **Create tag**: `git tag -s v0.X.0 -m "v0.X.0 - Description"`
+- **Update tag**: `git tag -s -f v0.X.0 -m "v0.X.0 - Description"`\
+  (NEVER delete, use `-f`)
+
+## Git Rules
+
+- **All tags MUST be signed** (`-s` flag) with descriptions
+- **Never delete tags** - use `git tag -f` to overwrite
+- **Never amend pushed commits** - check `git status` for divergence first
 
 ## Code Style
 
@@ -56,8 +65,6 @@ from concurrent.futures import InterpreterPoolExecutor
 - `compression.zstd` → Zstandard support
 - REPL has syntax highlighting
 - Free-threaded mode officially supported
-
-[Python 3.14 whatsnew]: https://docs.python.org/3/whatsnew/3.14.html "What’s new in Python 3.14"
 
 ## Structure
 
@@ -133,3 +140,7 @@ procclean mem                       # Show memory summary
 | `4`     | Sort by name            |
 | `5`     | Sort by cwd             |
 | `!`     | Reverse sort order      |
+
+<!--link definitions-->
+
+[Python 3.14 whatsnew]: https://docs.python.org/3/whatsnew/3.14.html "What’s new in Python 3.14"
