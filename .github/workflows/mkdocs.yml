@@ -44,6 +44,8 @@ jobs:
           UV_WORKING_DIR: site
           SITE_URL: https://kjanat.github.io/procclean/
           PNGQUANT: ${{ steps.check-pngquant.outputs.available }}
+          TTY_COMPATIBLE: "1"
+          TTY_INTERACTIVE: "0"
 
       - name: Create robots.txt to block indexing
         working-directory: site

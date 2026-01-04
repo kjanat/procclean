@@ -45,11 +45,26 @@ plugins:
   - typeset
   - optimize:
       optimize_png: !ENV [PNGQUANT, true]
+  - mkdocs-rich-argparse:
+      path: ..
+      module: src.procclean.cli.parser
+      factory: create_parser
+      heading: CLI Reference
+      styles:
+        prog: "#98f641"
+        args: "#54ebdd"
+        groups: "#98f641"
+        metavar: "#7af0e5"
+        syntax: "#98f641"
+        help: white
+        text: white
+        default: "#888888"
 
 nav:
   - Home: index.md
   - Installation: installation.md
   - CLI Reference: cli.md
+  - Examples: examples.md
   - TUI Guide: tui.md
 
 markdown_extensions:

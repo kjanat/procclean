@@ -1,10 +1,8 @@
-# CLI Reference
+# Examples
 
-## Commands
+Common usage patterns for the CLI.
 
-### list
-
-List processes with optional filters.
+## Listing Processes
 
 ```bash
 procclean list                          # All processes (table)
@@ -17,9 +15,7 @@ procclean list --cwd                    # Filter by current directory
 procclean list --cwd /path/to/dir       # Filter by specific cwd
 ```
 
-### kill
-
-Kill one or more processes.
+## Killing Processes
 
 ```bash
 procclean kill <PID> [PID...]   # Kill by PID(s)
@@ -30,20 +26,18 @@ procclean kill -k --preview     # Preview what would be killed
 procclean kill -k --dry-run     # Alias for --preview
 ```
 
-### groups
-
-Show process groups (similar processes grouped together).
+## Process Groups
 
 ```bash
-procclean groups
+procclean groups                # Show similar processes grouped
+procclean groups -f json        # JSON output
 ```
 
-### mem
-
-Show memory summary.
+## Memory Summary
 
 ```bash
-procclean mem
+procclean mem                   # Show memory summary
+procclean mem -f json           # JSON output
 ```
 
 ## Output Formats
@@ -68,3 +62,38 @@ The `-s` flag supports:
 | `pid`  | Process ID        |
 | `name` | Process name      |
 | `cwd`  | Working directory |
+
+## Common Workflows
+
+### Clean up orphaned dev processes
+
+```bash
+# Preview what would be killed
+procclean kill -k --preview
+
+# Kill all killable orphans (with confirmation)
+procclean kill -k
+
+# Kill without confirmation
+procclean kill -k -y
+```
+
+### Find memory hogs in a project directory
+
+```bash
+# List high-memory processes in current directory
+procclean list -m --cwd
+
+# Kill all processes in a specific directory
+procclean kill --cwd /path/to/project -y
+```
+
+### Export process list for analysis
+
+```bash
+# JSON for scripting
+procclean list -f json > processes.json
+
+# CSV for spreadsheets
+procclean list -f csv > processes.csv
+```
