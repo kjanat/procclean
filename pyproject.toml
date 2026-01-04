@@ -3,7 +3,7 @@
 
 [project]
 name = "procclean"
-version = "0.4.0"
+version = "1.0.0"
 description = "Interactive TUI for exploring and cleaning up processes - find orphans, memory hogs, and kill them"
 readme = "README.md"
 requires-python = ">=3.14"

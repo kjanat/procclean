@@ -681,7 +681,7 @@ wheels = [
 
 [[package]]
 name = "procclean"
-version = "0.4.0"
+version = "1.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "psutil", marker = "sys_platform == 'linux'" },
