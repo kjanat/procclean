@@ -9,7 +9,11 @@ from .commands import cmd_groups, cmd_kill, cmd_list, cmd_memory
 
 
 def create_parser() -> argparse.ArgumentParser:
-    """Create CLI argument parser."""
+    """Create CLI argument parser.
+
+    Returns:
+        argparse.ArgumentParser: Configured argument parser for the CLI.
+    """
     parser = argparse.ArgumentParser(
         prog="procclean",
         description="Process cleanup tool with TUI and CLI interfaces.",
@@ -49,7 +53,8 @@ def create_parser() -> argparse.ArgumentParser:
         "-F",
         "--filter",
         choices=["killable", "orphans", "high-memory"],
-        help="Filter preset: killable (orphans, not tmux, not system), orphans, high-memory",
+        help="Filter preset: killable (orphans, not tmux, not system), "
+        "orphans, high-memory",
     )
     list_parser.add_argument(
         "-k",
@@ -229,7 +234,8 @@ def create_parser() -> argparse.ArgumentParser:
         "--columns",
         type=str,
         metavar="COLS",
-        help=f"Comma-separated columns for preview ({','.join(get_available_columns())})",
+        help=f"Comma-separated columns for preview "
+        f"({','.join(get_available_columns())})",
     )
     kill_parser.set_defaults(func=cmd_kill)
 
@@ -250,7 +256,12 @@ def create_parser() -> argparse.ArgumentParser:
 
 
 def run_cli(args: list[str] | None = None) -> int:
-    """Run CLI with given args (or sys.argv if None)."""
+    """Run CLI with given args (or sys.argv if None).
+
+    Returns:
+        int: Exit status code. Returns ``-1`` when no subcommand is provided to
+        signal that the TUI should run.
+    """
     parser = create_parser()
     parsed = parser.parse_args(args)
 

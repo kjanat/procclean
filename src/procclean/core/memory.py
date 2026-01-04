@@ -4,7 +4,12 @@ import psutil
 
 
 def get_memory_summary() -> dict:
-    """Get system memory summary."""
+    """Get system memory summary.
+
+    Returns:
+        dict: A dictionary containing total, used, and available memory in GB,
+        memory usage percentage, and swap usage/total in GB.
+    """
     mem = psutil.virtual_memory()
     swap = psutil.swap_memory()
     return {

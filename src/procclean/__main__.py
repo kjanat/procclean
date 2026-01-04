@@ -9,7 +9,6 @@ def main() -> None:
 
     Raises:
         SystemExit: When CLI command returns non-zero exit code.
-
     """
     result = run_cli()
     if result == -1:

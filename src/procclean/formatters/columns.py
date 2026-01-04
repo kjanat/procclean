@@ -1,11 +1,13 @@
 """Column specifications for process tables."""
 
-from collections.abc import Callable
 from dataclasses import dataclass, replace
 from enum import StrEnum, auto
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
-from procclean.core import ProcessInfo
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from procclean.core import ProcessInfo
 
 
 class ClipSide(StrEnum):
@@ -16,7 +18,17 @@ class ClipSide(StrEnum):
 
 
 def clip(s: str, max_len: int, side: ClipSide = ClipSide.RIGHT) -> str:
-    """Truncate string, adding ellipsis on clipped side."""
+    """Truncate string, adding ellipsis on clipped side.
+
+    Args:
+        s: Input string to potentially clip.
+        max_len: Maximum length of returned string, including ellipsis.
+        side: Which side to truncate when clipping.
+
+    Returns:
+        The original string if it fits within ``max_len``; otherwise a clipped
+        version with an ellipsis on the clipped side.
+    """
     if len(s) <= max_len:
         return s
     match side:
@@ -38,14 +50,30 @@ class ColumnSpec[T]:
     clip_side: ClipSide = ClipSide.RIGHT
 
     def extract(self, proc: ProcessInfo) -> str:
-        """Extract and format value from process."""
+        """Extract and format value from a process.
+
+        Args:
+            proc: Process to extract the value from.
+
+        Returns:
+            The formatted value, clipped with an ellipsis if it exceeds
+            ``max_width``.
+        """
         formatted = self.fmt(self.get(proc))
         if self.max_width and len(formatted) > self.max_width:
             return clip(formatted, self.max_width, self.clip_side)
         return formatted
 
     def with_width(self, width: int, side: ClipSide = ClipSide.RIGHT) -> Self:
-        """Return a copy with specified max width and clip side."""
+        """Return a copy with specified max width and clip side.
+
+        Args:
+            width: Maximum width for the column output.
+            side: Which side to truncate when clipping.
+
+        Returns:
+            A new ``ColumnSpec`` with ``max_width`` and ``clip_side`` set.
+        """
         return replace(self, max_width=width, clip_side=side)
 
 
@@ -94,5 +122,9 @@ DEFAULT_COLUMNS: tuple[str, ...] = (
 
 
 def get_available_columns() -> list[str]:
-    """Return list of available column keys."""
+    """Return list of available column keys.
+
+    Returns:
+        A list of keys for all available columns.
+    """
     return list(COLUMNS)

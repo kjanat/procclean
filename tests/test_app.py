@@ -8,6 +8,8 @@ from textual.widgets import OptionList, Static
 from procclean import main
 from procclean.tui import ConfirmKillScreen, ProcessCleanerApp
 
+from .conftest import TEST_PATH_SINGLE
+
 
 @pytest.fixture
 def mock_process_data(sample_processes):
@@ -44,13 +46,21 @@ def mock_process_data(sample_processes):
 
 @pytest.fixture
 def many_processes(make_process):
-    """Create 15 processes for testing >10 display."""
+    """Create 15 processes for testing >10 display.
+
+    Returns:
+        list: List of 15 mock process objects.
+    """
     return [make_process(pid=i, name=f"proc{i}", rss_mb=100.0 + i) for i in range(15)]
 
 
 @pytest.fixture
 def long_cwd_processes(make_process):
-    """Create processes with long cwd paths."""
+    """Create processes with long cwd paths.
+
+    Returns:
+        list: List of mock process objects with long cwd paths.
+    """
     return [
         make_process(
             pid=1,
@@ -333,7 +343,7 @@ class TestProcessCleanerApp:
         """Should filter by cwd when 'w' pressed."""
         procs = [
             make_process(pid=1, name="proc1", cwd="/home/user/project"),
-            make_process(pid=2, name="proc2", cwd="/tmp"),
+            make_process(pid=2, name="proc2", cwd=TEST_PATH_SINGLE),
         ]
         mock_process_data["get_procs"].return_value = procs
 
@@ -379,7 +389,7 @@ class TestProcessCleanerApp:
         procs = [
             make_process(pid=1, name="proc1", cwd="/home/user/project"),
             make_process(pid=2, name="proc2", cwd="/home/user/project/sub"),
-            make_process(pid=3, name="proc3", cwd="/tmp"),
+            make_process(pid=3, name="proc3", cwd=TEST_PATH_SINGLE),
         ]
         mock_process_data["get_procs"].return_value = procs
 

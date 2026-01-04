@@ -1,7 +1,10 @@
 """Tests for CLI module."""
 
 import json
+from pathlib import Path
 from unittest.mock import patch
+
+import pytest
 
 from procclean.cli import (
     _confirm_kill,
@@ -14,6 +17,20 @@ from procclean.cli import (
     create_parser,
     get_filtered_processes,
     run_cli,
+)
+
+from .conftest import (
+    CLI_HIGH_THRESHOLD,
+    CLI_HIGH_THRESHOLD_200,
+    CLI_LIMIT_2,
+    CLI_LIMIT_5,
+    CLI_LIMIT_10,
+    CLI_MIN_MEMORY,
+    CLI_TOTAL_GB,
+    CWD_MATCH_COUNT,
+    PID_NODE,
+    PID_PYTHON,
+    TEST_PATH_SINGLE,
 )
 
 
@@ -58,16 +75,16 @@ class TestCreateParser:
         assert args.ascending is True
         assert args.orphans is True
         assert args.high_memory is True
-        assert args.limit == 10
+        assert args.limit == CLI_LIMIT_10
         assert args.columns == "pid,name"
-        assert args.min_memory == 50.0
-        assert args.high_memory_threshold == 1000.0
+        assert args.min_memory == CLI_MIN_MEMORY
+        assert args.high_memory_threshold == CLI_HIGH_THRESHOLD
 
     def test_list_alias_ls(self):
         """Should support 'ls' alias for list."""
         parser = create_parser()
         args = parser.parse_args(["ls"])
-        assert args.command in ("list", "ls")
+        assert args.command in {"list", "ls"}
         assert hasattr(args, "func")
 
     def test_list_cwd_no_value(self):
@@ -106,15 +123,15 @@ class TestCreateParser:
         """Should support 'g' alias for groups."""
         parser = create_parser()
         args = parser.parse_args(["g", "-f", "json"])
-        assert args.command in ("groups", "g")
+        assert args.command in {"groups", "g"}
         assert args.format == "json"
 
     def test_kill_command_no_pids_allowed(self):
         """Should allow kill without PIDs (uses filters instead)."""
         parser = create_parser()
-        args = parser.parse_args(["kill", "--cwd", "/tmp"])
+        args = parser.parse_args(["kill", "--cwd", TEST_PATH_SINGLE])
         assert args.pids == []
-        assert args.cwd == "/tmp"
+        assert args.cwd == TEST_PATH_SINGLE
 
     def test_kill_command_with_pids(self):
         """Should parse kill command with PIDs."""
@@ -168,7 +185,7 @@ class TestCreateParser:
         parser = create_parser()
         args = parser.parse_args(["kill", "-k", "--preview", "-s", "cpu", "-n", "5"])
         assert args.sort == "cpu"
-        assert args.limit == 5
+        assert args.limit == CLI_LIMIT_5
 
     def test_kill_preview_with_columns(self):
         """Should parse preview with custom columns."""
@@ -180,7 +197,7 @@ class TestCreateParser:
         """Should parse --high-memory-threshold for kill."""
         parser = create_parser()
         args = parser.parse_args(["kill", "-m", "--high-memory-threshold", "200", "-y"])
-        assert args.high_memory_threshold == 200.0
+        assert args.high_memory_threshold == CLI_HIGH_THRESHOLD_200
 
     def test_memory_command(self):
         """Should parse memory command."""
@@ -193,7 +210,7 @@ class TestCreateParser:
         """Should support 'mem' alias for memory."""
         parser = create_parser()
         args = parser.parse_args(["mem", "-f", "json"])
-        assert args.command in ("memory", "mem")
+        assert args.command in {"memory", "mem"}
         assert args.format == "json"
 
 
@@ -309,7 +326,7 @@ class TestCmdList:
 
         # format_output should receive limited list
         call_args = mock_format.call_args[0]
-        assert len(call_args[0]) == 2
+        assert len(call_args[0]) == CLI_LIMIT_2
 
     @patch("procclean.cli.commands.get_process_list")
     @patch("procclean.cli.commands.filter_by_cwd")
@@ -330,7 +347,8 @@ class TestCmdList:
 
         mock_filter.assert_called_once_with(sample_processes, "/home/user/project")
 
-    @patch("os.getcwd", return_value="/current/working/dir")
+    @pytest.mark.usefixtures("sample_processes")
+    @patch("procclean.cli.commands.Path.cwd", return_value=Path("/current/working/dir"))
     @patch("procclean.cli.commands.get_process_list")
     @patch("procclean.cli.commands.filter_by_cwd")
     @patch("procclean.cli.commands.sort_processes")
@@ -341,7 +359,7 @@ class TestCmdList:
         mock_sort,
         mock_filter,
         mock_get_procs,
-        _mock_getcwd,
+        mock_cwd,
         sample_processes,
     ):
         """Should use current directory when --cwd has no value."""
@@ -355,6 +373,7 @@ class TestCmdList:
         cmd_list(args)
 
         mock_filter.assert_called_once_with(sample_processes, "/current/working/dir")
+        _ = mock_cwd  # Assigned to avoid unused fixture warning
 
 
 class TestCmdGroups:
@@ -598,7 +617,7 @@ class TestCmdMemory:
         assert result == 0
         captured = capsys.readouterr()
         data = json.loads(captured.out)
-        assert data["total_gb"] == 16.0
+        assert data["total_gb"] == CLI_TOTAL_GB
 
     @patch("procclean.cli.commands.get_memory_summary")
     def test_table_output(self, mock_mem, capsys):
@@ -679,8 +698,8 @@ class TestGetKillTargets:
         args = parser.parse_args(["kill", "1", "2", "-y"])
         result = _get_kill_targets(args)
 
-        assert len(result) == 2
-        assert {p.pid for p in result} == {1, 2}
+        assert len(result) == CWD_MATCH_COUNT
+        assert {p.pid for p in result} == {PID_PYTHON, PID_NODE}
 
     @patch("procclean.cli.commands.get_process_list")
     def test_warns_missing_pids(self, mock_get, sample_processes, capsys):
@@ -749,7 +768,7 @@ class TestDoPreview:
 
         # format_output should receive limited list
         call_args = mock_format.call_args[0]
-        assert len(call_args[0]) == 2
+        assert len(call_args[0]) == CLI_LIMIT_2
 
     @patch("procclean.cli.commands.format_output")
     def test_uses_specified_format(self, mock_format, sample_processes):

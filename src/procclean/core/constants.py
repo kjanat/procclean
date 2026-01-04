@@ -1,5 +1,14 @@
 """Constants for process analysis."""
 
+# Display constants
+PREVIEW_LIMIT = 5  # Number of processes to show in previews
+CONFIRM_PREVIEW_LIMIT = 10  # Number of processes to show in confirm dialogs
+CWD_MAX_WIDTH = 35  # Max width for cwd column display
+CWD_TRUNCATE_WIDTH = 32  # Width to keep when truncating cwd
+
+# Memory thresholds
+HIGH_MEMORY_THRESHOLD_MB = 500  # Default threshold for high memory filter
+
 # System library paths - executables here are system services
 SYSTEM_EXE_PATHS = ("/usr/lib", "/usr/libexec", "/lib")
 

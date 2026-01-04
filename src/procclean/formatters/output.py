@@ -3,8 +3,8 @@
 import csv
 import io
 import json
-from collections.abc import Sequence
 from dataclasses import asdict, fields
+from typing import TYPE_CHECKING
 
 from tabulate import tabulate
 
@@ -12,12 +12,24 @@ from procclean.core import ProcessInfo
 
 from .columns import COLUMNS, DEFAULT_COLUMNS
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 
 def get_rows(
     procs: list[ProcessInfo],
     columns: Sequence[str] | None = None,
 ) -> tuple[list[str], list[list[str]]]:
-    """Extract headers and formatted rows from processes."""
+    """Extract headers and formatted rows from processes.
+
+    Args:
+        procs: Processes to extract rows from.
+        columns: Optional ordered list of column keys to include.
+
+    Returns:
+        A tuple of (headers, rows), where headers is a list of column headers and
+        rows is a list of formatted string rows.
+    """
     cols = columns or DEFAULT_COLUMNS
     specs = [COLUMNS[c] for c in cols if c in COLUMNS]
     headers = [s.header for s in specs]
@@ -29,7 +41,15 @@ def format_table(
     procs: list[ProcessInfo],
     columns: Sequence[str] | None = None,
 ) -> str:
-    """Format processes as ASCII table."""
+    """Format processes as ASCII table.
+
+    Args:
+        procs: Processes to format.
+        columns: Optional ordered list of column keys to include.
+
+    Returns:
+        A formatted ASCII table string, or a message if no processes are found.
+    """
     if not procs:
         return "No processes found."
     headers, rows = get_rows(procs, columns)
@@ -40,7 +60,15 @@ def format_markdown(
     procs: list[ProcessInfo],
     columns: Sequence[str] | None = None,
 ) -> str:
-    """Format processes as GitHub-flavored Markdown table."""
+    """Format processes as a GitHub-flavored Markdown table.
+
+    Args:
+        procs: Processes to format.
+        columns: Optional ordered list of column keys to include.
+
+    Returns:
+        A formatted Markdown table string, or a message if no processes are found.
+    """
     if not procs:
         return "No processes found."
     headers, rows = get_rows(procs, columns)
@@ -48,7 +76,16 @@ def format_markdown(
 
 
 def _serialize_process(p: ProcessInfo) -> dict:
-    """Convert process to JSON-serializable dict with rounded floats."""
+    """Convert a process to a JSON-serializable dictionary.
+
+    Float values are rounded to 2 decimal places for stable output.
+
+    Args:
+        p: Process to serialize.
+
+    Returns:
+        A JSON-serializable dict representation of the process.
+    """
     data = asdict(p)
     data["rss_mb"] = round(data["rss_mb"], 2)
     data["cpu_percent"] = round(data["cpu_percent"], 2)
@@ -56,12 +93,27 @@ def _serialize_process(p: ProcessInfo) -> dict:
 
 
 def format_json(procs: list[ProcessInfo]) -> str:
-    """Format processes as JSON."""
+    """Format processes as JSON.
+
+    Args:
+        procs: Processes to format.
+
+    Returns:
+        A pretty-printed JSON string representing the processes.
+    """
     return json.dumps([_serialize_process(p) for p in procs], indent=2)
 
 
 def format_csv(procs: list[ProcessInfo]) -> str:
-    """Format processes as CSV."""
+    """Format processes as CSV.
+
+    Args:
+        procs: Processes to format.
+
+    Returns:
+        A CSV string representing the processes. If no processes are provided,
+        returns an empty string.
+    """
     if not procs:
         return ""
     output = io.StringIO()
@@ -88,7 +140,16 @@ def format_output(
     fmt: str,
     columns: Sequence[str] | None = None,
 ) -> str:
-    """Format processes in requested format."""
+    """Format processes in the requested format.
+
+    Args:
+        procs: Processes to format.
+        fmt: Output format key (e.g., "json", "csv", "md"/"markdown").
+        columns: Optional ordered list of column keys to include (table/markdown).
+
+    Returns:
+        The formatted output string.
+    """
     match fmt:
         case "json":
             return format_json(procs)

@@ -9,7 +9,14 @@ from .models import ProcessInfo
 
 
 def get_tmux_env(pid: int) -> bool:
-    """Check if process has TMUX environment variable."""
+    """Check whether the process has a TMUX environment variable.
+
+    Args:
+        pid: Process ID.
+
+    Returns:
+        True if the process environment contains ``TMUX=``, otherwise False.
+    """
     try:
         environ_path = Path(f"/proc/{pid}/environ")
         if environ_path.exists():
@@ -21,9 +28,18 @@ def get_tmux_env(pid: int) -> bool:
 
 
 def get_cwd(pid: int) -> str:
-    """Get process working directory."""
+    """Get process working directory.
+
+    Args:
+        pid: Process ID.
+
+    Returns:
+        The resolved current working directory for the process, or "?" if it
+        cannot be determined due to permissions or the process no longer
+        existing.
+    """
     try:
-        return os.readlink(f"/proc/{pid}/cwd")
+        return str(Path(f"/proc/{pid}/cwd").readlink())
     except PermissionError, FileNotFoundError, ProcessLookupError:
         return "?"
 
@@ -33,7 +49,17 @@ def get_process_list(
     filter_user: str | None = None,
     min_memory_mb: float = 10.0,
 ) -> list[ProcessInfo]:
-    """Get list of processes with detailed info."""
+    """Get list of processes with detailed info.
+
+    Args:
+        sort_by: Field to sort by ("memory", "cpu", or "name").
+        filter_user: Only include processes owned by this user. Defaults to the
+            current user.
+        min_memory_mb: Minimum RSS (in MB) for a process to be included.
+
+    Returns:
+        A list of ProcessInfo entries matching the filters, sorted by ``sort_by``.
+    """
     processes = []
     current_user = os.getlogin()
     filter_user = filter_user or current_user
@@ -68,7 +94,7 @@ def get_process_list(
                 parent_name = "?"
 
             # Check if orphaned (parent is init/systemd)
-            is_orphan = ppid == 1 or parent_name in ("systemd", "init")
+            is_orphan = ppid == 1 or parent_name in {"systemd", "init"}
 
             cmdline = " ".join(info["cmdline"] or [])[:200]
             if not cmdline:
@@ -107,7 +133,16 @@ def get_process_list(
 def find_similar_processes(
     processes: list[ProcessInfo],
 ) -> dict[str, list[ProcessInfo]]:
-    """Group processes by similar command patterns."""
+    """Group processes by similar command patterns.
+
+    Args:
+        processes: Processes to group.
+
+    Returns:
+        A mapping of group keys (normalized executable/command names) to the list
+        of processes in that group. Only groups containing more than one process
+        are returned.
+    """
     groups: dict[str, list[ProcessInfo]] = {}
 
     for proc in processes:

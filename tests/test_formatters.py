@@ -19,6 +19,17 @@ from procclean.formatters import (
     get_rows,
 )
 
+from .conftest import (
+    CLIP_WIDTH_8,
+    CLIP_WIDTH_10,
+    CLIP_WIDTH_15,
+    COL_COUNT_3,
+    MIN_TABLE_LINES,
+    NAME_MAX_WIDTH,
+    TEST_PATH_SINGLE,
+    TEST_PID_42,
+)
+
 
 class TestClip:
     """Tests for clip function."""
@@ -33,21 +44,21 @@ class TestClip:
 
     def test_clips_right_by_default(self):
         """Should truncate keeping left portion with ellipsis on right."""
-        result = clip("hello world", 8)
+        result = clip("hello world", CLIP_WIDTH_8)
         assert result == "hello..."
-        assert len(result) == 8
+        assert len(result) == CLIP_WIDTH_8
 
     def test_clips_left_when_specified(self):
         """Should truncate keeping right portion with ellipsis on left."""
-        result = clip("/very/long/path/to/file", 15, ClipSide.LEFT)
+        result = clip("/very/long/path/to/file", CLIP_WIDTH_15, ClipSide.LEFT)
         assert result == "...path/to/file"
-        assert len(result) == 15
+        assert len(result) == CLIP_WIDTH_15
 
     def test_clips_right_when_specified(self):
         """Should truncate keeping left portion when RIGHT specified."""
-        result = clip("hello world foo", 10, ClipSide.RIGHT)
+        result = clip("hello world foo", CLIP_WIDTH_10, ClipSide.RIGHT)
         assert result == "hello w..."
-        assert len(result) == 10
+        assert len(result) == CLIP_WIDTH_10
 
 
 class TestColumnSpec:
@@ -79,14 +90,14 @@ class TestColumnSpec:
         proc = make_process(cwd="/very/long/path/to/dir")
         result = spec.extract(proc)
         assert result.startswith("...")
-        assert len(result) == 15
+        assert len(result) == CLIP_WIDTH_15
 
     def test_with_width_returns_new_spec(self, make_process):
         """with_width should return new ColumnSpec with updated width."""
         original = ColumnSpec("name", "Name", lambda p: p.name)
-        modified = original.with_width(10, ClipSide.LEFT)
+        modified = original.with_width(CLIP_WIDTH_10, ClipSide.LEFT)
 
-        assert modified.max_width == 10
+        assert modified.max_width == CLIP_WIDTH_10
         assert modified.clip_side == ClipSide.LEFT
         assert original.max_width is None  # Original unchanged
 
@@ -114,7 +125,7 @@ class TestGetRows:
         headers, rows = get_rows(sample_processes, columns=["pid", "name", "rss_mb"])
         assert headers == ["PID", "Name", "RAM (MB)"]
         assert len(rows) == len(sample_processes)
-        assert len(rows[0]) == 3
+        assert len(rows[0]) == COL_COUNT_3
 
     def test_ignores_invalid_columns(self, sample_processes):
         """Should ignore columns not in COLUMNS."""
@@ -154,7 +165,7 @@ class TestFormatMarkdown:
         assert "PID" in result
         # Should have header separator row
         lines = result.strip().split("\n")
-        assert len(lines) >= 3  # header + separator + at least 1 row
+        assert len(lines) >= MIN_TABLE_LINES  # header + separator + at least 1 row
 
 
 class TestFormatJson:
@@ -173,16 +184,16 @@ class TestFormatJson:
             pid=42,
             name="test",
             cmdline="test cmd",
-            cwd="/tmp",
+            cwd=TEST_PATH_SINGLE,
             is_orphan=True,
             in_tmux=True,
         )
         result = format_json([proc])
         data = json.loads(result)[0]
-        assert data["pid"] == 42
+        assert data["pid"] == TEST_PID_42
         assert data["name"] == "test"
         assert data["cmdline"] == "test cmd"
-        assert data["cwd"] == "/tmp"
+        assert data["cwd"] == TEST_PATH_SINGLE
         assert data["is_orphan"] is True
         assert data["in_tmux"] is True
         assert "rss_mb" in data
@@ -287,4 +298,4 @@ class TestColumnsDefinitions:
 
     def test_name_column_has_max_width(self):
         """Name column should have max_width configured."""
-        assert COLUMNS["name"].max_width == 25
+        assert COLUMNS["name"].max_width == NAME_MAX_WIDTH

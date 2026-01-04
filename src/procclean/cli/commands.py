@@ -1,11 +1,14 @@
 """CLI command handlers."""
 
-import argparse
 import json
-import os
 import sys
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+from rich import print
 
 from procclean.core import (
+    PREVIEW_LIMIT,
     filter_by_cwd,
     filter_high_memory,
     filter_killable,
@@ -18,9 +21,16 @@ from procclean.core import (
 )
 from procclean.formatters import format_output
 
+if TYPE_CHECKING:
+    import argparse
+
 
 def cmd_list(args: argparse.Namespace) -> int:
-    """List processes command."""
+    """List processes command.
+
+    Returns:
+        int: Exit code (0 on success).
+    """
     procs = get_filtered_processes(args)
 
     # Apply sorting
@@ -39,7 +49,11 @@ def cmd_list(args: argparse.Namespace) -> int:
 
 
 def cmd_groups(args: argparse.Namespace) -> int:
-    """Show grouped processes command."""
+    """Show grouped processes command.
+
+    Returns:
+        int: Exit code (0 on success).
+    """
     procs = get_process_list(min_memory_mb=args.min_memory)
     groups = find_similar_processes(procs)
 
@@ -69,12 +83,16 @@ def cmd_groups(args: argparse.Namespace) -> int:
 
 
 def get_filtered_processes(args: argparse.Namespace) -> list:
-    """Get processes with all filters from args applied."""
+    """Get processes with all filters from args applied.
+
+    Returns:
+        list: Filtered list of processes.
+    """
     procs = get_process_list(min_memory_mb=getattr(args, "min_memory", 5.0))
 
     # Apply cwd filter
     if getattr(args, "cwd", None) is not None:
-        cwd_path = args.cwd or os.getcwd()
+        cwd_path = args.cwd or str(Path.cwd())
         procs = filter_by_cwd(procs, cwd_path)
 
     # Apply preset filters
@@ -91,7 +109,11 @@ def get_filtered_processes(args: argparse.Namespace) -> list:
 
 
 def _get_kill_targets(args: argparse.Namespace) -> list:
-    """Get target processes for kill command from PIDs or filters."""
+    """Get target processes for kill command from PIDs or filters.
+
+    Returns:
+        list: Target processes to kill.
+    """
     if args.pids:
         all_procs = get_process_list(min_memory_mb=0)
         pid_set = set(args.pids)
@@ -105,7 +127,11 @@ def _get_kill_targets(args: argparse.Namespace) -> list:
 
 
 def _do_preview(args: argparse.Namespace, procs: list) -> int:
-    """Show preview of what would be killed."""
+    """Show preview of what would be killed.
+
+    Returns:
+        int: Exit code (0 on success).
+    """
     if hasattr(args, "sort") and args.sort:
         procs = sort_processes(procs, sort_by=args.sort, reverse=True)
     if hasattr(args, "limit") and args.limit:
@@ -118,24 +144,37 @@ def _do_preview(args: argparse.Namespace, procs: list) -> int:
 
 
 def _confirm_kill(args: argparse.Namespace, procs: list) -> bool:
-    """Prompt for kill confirmation. Returns True if confirmed."""
+    """Prompt for kill confirmation.
+
+    Args:
+        args: Parsed CLI arguments.
+        procs: Processes that would be killed.
+
+    Returns:
+        True if the kill action is confirmed (or confirmation is skipped), otherwise
+        False.
+    """
     if args.yes or not sys.stdin.isatty():
         return True
     action = "FORCE KILL" if args.force else "terminate"
     print(f"About to {action} {len(procs)} process(es):")
-    for p in procs[:5]:
+    for p in procs[:PREVIEW_LIMIT]:
         print(f"  {p.pid}: {p.name} ({p.rss_mb:.1f} MB)")
-    if len(procs) > 5:
-        print(f"  ... and {len(procs) - 5} more")
+    if len(procs) > PREVIEW_LIMIT:
+        print(f"  ... and {len(procs) - PREVIEW_LIMIT} more")
     try:
         response = input("Continue? [y/N] ")
-        return response.lower() in ("y", "yes")
+        return response.lower() in {"y", "yes"}
     except EOFError:
         return True  # Non-interactive
 
 
 def cmd_kill(args: argparse.Namespace) -> int:
-    """Kill processes command."""
+    """Kill processes command.
+
+    Returns:
+        int: Exit code (0 on success).
+    """
     procs = _get_kill_targets(args)
     if not procs:
         print("No processes match the filters.")
@@ -150,7 +189,7 @@ def cmd_kill(args: argparse.Namespace) -> int:
 
     results = kill_processes([p.pid for p in procs], force=args.force)
     exit_code = 0
-    for pid, success, msg in results:
+    for _pid, success, msg in results:
         status = "OK" if success else "FAILED"
         print(f"[{status}] {msg}")
         if not success:
@@ -159,7 +198,11 @@ def cmd_kill(args: argparse.Namespace) -> int:
 
 
 def cmd_memory(args: argparse.Namespace) -> int:
-    """Show memory summary command."""
+    """Show memory summary command.
+
+    Returns:
+        int: Exit code (0 on success).
+    """
     mem = get_memory_summary()
 
     if args.format == "json":

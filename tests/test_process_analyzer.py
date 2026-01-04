@@ -23,6 +23,29 @@ from procclean.core import (
     sort_processes,
 )
 
+from .conftest import (
+    CWD_MATCH_COUNT,
+    HIGH_MEM_COUNT_1,
+    HIGH_MEM_COUNT_4,
+    KILL_RESULTS_3,
+    ORPHAN_COUNT,
+    PERCENT_50,
+    PID_APP,
+    PID_NODE,
+    PID_PYTHON,
+    PID_RUST,
+    PID_ZSH,
+    TEST_PATH_A,
+    TEST_PATH_AB,
+    TEST_PATH_B,
+    TEST_PATH_BUILD,
+    TEST_PATH_GLOB,
+    TEST_PATH_SINGLE,
+    TEST_PATH_Z,
+    TEST_PID_DEFAULT,
+    THRESHOLD_500,
+)
+
 
 class TestGetTmuxEnv:
     """Tests for get_tmux_env function."""
@@ -93,7 +116,11 @@ class TestGetProcessList:
         create_time=1000.0,
         status="running",
     ):
-        """Create a mock process info dict."""
+        """Create a mock process info dict.
+
+        Returns:
+            dict: A psutil-like ``proc.info`` mapping containing process metadata.
+        """
         mock_mem = MagicMock()
         mock_mem.rss = rss
         return {
@@ -132,7 +159,7 @@ class TestGetProcessList:
         result = get_process_list(min_memory_mb=5.0)
 
         assert len(result) == 1
-        assert result[0].pid == 1234
+        assert result[0].pid == TEST_PID_DEFAULT
         assert result[0].name == "python"
         assert result[0].parent_name == "bash"
 
@@ -143,7 +170,7 @@ class TestGetProcessList:
     def test_filters_by_user(self, mock_login, mock_iter, mock_process, mock_cwd):
         """Should filter processes by username."""
         mock_login.return_value = "testuser"
-        mock_cwd.return_value = "/tmp"
+        mock_cwd.return_value = "/var/test"
 
         mock_proc1 = MagicMock()
         mock_proc1.info = self._mock_proc_info(pid=1, username="testuser")
@@ -167,7 +194,7 @@ class TestGetProcessList:
     def test_filters_by_min_memory(self, mock_login, mock_iter, mock_process, mock_cwd):
         """Should filter processes below min_memory_mb."""
         mock_login.return_value = "testuser"
-        mock_cwd.return_value = "/tmp"
+        mock_cwd.return_value = "/var/test"
 
         # 50 MB process (below default 10 MB threshold but above 5 MB)
         mock_proc1 = MagicMock()
@@ -195,7 +222,7 @@ class TestGetProcessList:
     ):
         """Should skip processes that disappear during iteration."""
         mock_login.return_value = "testuser"
-        mock_cwd.return_value = "/tmp"
+        mock_cwd.return_value = "/var/test"
 
         mock_proc = MagicMock()
         mock_proc.info = self._mock_proc_info()
@@ -221,7 +248,7 @@ class TestGetProcessList:
     ):
         """Should handle AccessDenied when getting parent process."""
         mock_login.return_value = "testuser"
-        mock_cwd.return_value = "/tmp"
+        mock_cwd.return_value = "/var/test"
 
         mock_proc = MagicMock()
         mock_proc.info = self._mock_proc_info()
@@ -244,7 +271,7 @@ class TestGetProcessList:
     ):
         """Should mark process as orphan when ppid is 1."""
         mock_login.return_value = "testuser"
-        mock_cwd.return_value = "/tmp"
+        mock_cwd.return_value = "/var/test"
         mock_tmux.return_value = False
 
         mock_proc = MagicMock()
@@ -270,7 +297,7 @@ class TestGetProcessList:
     ):
         """Should check tmux env for orphan processes."""
         mock_login.return_value = "testuser"
-        mock_cwd.return_value = "/tmp"
+        mock_cwd.return_value = "/var/test"
         mock_tmux.return_value = True
 
         mock_proc = MagicMock()
@@ -295,7 +322,7 @@ class TestGetProcessList:
     def test_sorts_by_memory(self, mock_login, mock_iter, mock_process, mock_cwd):
         """Should sort by memory when sort_by='memory'."""
         mock_login.return_value = "testuser"
-        mock_cwd.return_value = "/tmp"
+        mock_cwd.return_value = "/var/test"
 
         mock_proc1 = MagicMock()
         mock_proc1.info = self._mock_proc_info(pid=1, rss=50 * 1024 * 1024)
@@ -309,8 +336,8 @@ class TestGetProcessList:
 
         result = get_process_list(sort_by="memory", min_memory_mb=5.0)
 
-        assert result[0].pid == 2  # Higher memory first
-        assert result[1].pid == 1
+        assert result[0].pid == PID_NODE  # Higher memory first
+        assert result[1].pid == PID_PYTHON
 
     @patch("procclean.core.process.get_cwd")
     @patch("psutil.Process")
@@ -319,7 +346,7 @@ class TestGetProcessList:
     def test_sorts_by_cpu(self, mock_login, mock_iter, mock_process, mock_cwd):
         """Should sort by CPU when sort_by='cpu'."""
         mock_login.return_value = "testuser"
-        mock_cwd.return_value = "/tmp"
+        mock_cwd.return_value = "/var/test"
 
         mock_proc1 = MagicMock()
         mock_proc1.info = self._mock_proc_info(pid=1, cpu_percent=10.0)
@@ -333,8 +360,8 @@ class TestGetProcessList:
 
         result = get_process_list(sort_by="cpu", min_memory_mb=5.0)
 
-        assert result[0].pid == 2  # Higher CPU first
-        assert result[1].pid == 1
+        assert result[0].pid == PID_NODE  # Higher CPU first
+        assert result[1].pid == PID_PYTHON
 
     @patch("procclean.core.process.get_cwd")
     @patch("psutil.Process")
@@ -343,7 +370,7 @@ class TestGetProcessList:
     def test_sorts_by_name(self, mock_login, mock_iter, mock_process, mock_cwd):
         """Should sort by name when sort_by='name'."""
         mock_login.return_value = "testuser"
-        mock_cwd.return_value = "/tmp"
+        mock_cwd.return_value = "/var/test"
 
         mock_proc1 = MagicMock()
         mock_proc1.info = self._mock_proc_info(pid=1, name="zsh")
@@ -367,7 +394,7 @@ class TestGetProcessList:
     def test_handles_empty_cmdline(self, mock_login, mock_iter, mock_process, mock_cwd):
         """Should use name as cmdline when cmdline is empty."""
         mock_login.return_value = "testuser"
-        mock_cwd.return_value = "/tmp"
+        mock_cwd.return_value = "/var/test"
 
         mock_mem = MagicMock()
         mock_mem.rss = 100 * 1024 * 1024
@@ -404,7 +431,7 @@ class TestGetProcessList:
     ):
         """Should handle None memory_info gracefully."""
         mock_login.return_value = "testuser"
-        mock_cwd.return_value = "/tmp"
+        mock_cwd.return_value = "/var/test"
 
         mock_proc = MagicMock()
         info = self._mock_proc_info()
@@ -447,7 +474,7 @@ class TestGetProcessList:
     ):
         """Should filter by custom user when specified."""
         mock_login.return_value = "testuser"
-        mock_cwd.return_value = "/tmp"
+        mock_cwd.return_value = "/var/test"
 
         mock_proc1 = MagicMock()
         mock_proc1.info = self._mock_proc_info(pid=1, username="testuser")
@@ -462,7 +489,7 @@ class TestGetProcessList:
         result = get_process_list(filter_user="admin", min_memory_mb=5.0)
 
         assert len(result) == 1
-        assert result[0].pid == 2
+        assert result[0].pid == PID_NODE
 
     @patch("procclean.core.process.get_cwd")
     @patch("psutil.Process")
@@ -471,7 +498,7 @@ class TestGetProcessList:
     def test_handles_none_ppid(self, mock_login, mock_iter, mock_process, mock_cwd):
         """Should handle None ppid gracefully."""
         mock_login.return_value = "testuser"
-        mock_cwd.return_value = "/tmp"
+        mock_cwd.return_value = "/var/test"
 
         mock_proc = MagicMock()
         info = self._mock_proc_info()
@@ -501,7 +528,7 @@ class TestFindSimilarProcesses:
         ]
         groups = find_similar_processes(procs)
         assert "python" in groups
-        assert len(groups["python"]) == 2
+        assert len(groups["python"]) == CWD_MATCH_COUNT
         assert "node" not in groups  # only 1 process
 
     def test_returns_empty_for_unique_processes(self, make_process):
@@ -524,7 +551,7 @@ class TestFindSimilarProcesses:
         ]
         groups = find_similar_processes(procs)
         assert "python" in groups
-        assert len(groups["python"]) == 2
+        assert len(groups["python"]) == CWD_MATCH_COUNT
 
 
 class TestKillProcess:
@@ -585,7 +612,7 @@ class TestKillProcesses:
                 (True, "killed"),
             ]
             results = kill_processes([1, 2, 3])
-            assert len(results) == 3
+            assert len(results) == KILL_RESULTS_3
             assert results[0] == (1, True, "killed")
             assert results[1] == (2, False, "not found")
             assert results[2] == (3, True, "killed")
@@ -606,14 +633,16 @@ class TestGetMemorySummary:
         mock_swap.used = 1 * 1024**3  # 1 GB
         mock_swap.total = 4 * 1024**3  # 4 GB
 
-        with patch("psutil.virtual_memory", return_value=mock_mem):
-            with patch("psutil.swap_memory", return_value=mock_swap):
-                summary = get_memory_summary()
+        with (
+            patch("psutil.virtual_memory", return_value=mock_mem),
+            patch("psutil.swap_memory", return_value=mock_swap),
+        ):
+            summary = get_memory_summary()
 
         assert summary["total_gb"] == pytest.approx(16.0)
         assert summary["used_gb"] == pytest.approx(8.0)
         assert summary["free_gb"] == pytest.approx(8.0)
-        assert summary["percent"] == 50.0
+        assert summary["percent"] == PERCENT_50
         assert summary["swap_used_gb"] == pytest.approx(1.0)
         assert summary["swap_total_gb"] == pytest.approx(4.0)
 
@@ -645,7 +674,7 @@ class TestFilterOrphans:
         result = filter_orphans(sample_processes)
         assert all(p.is_orphan for p in result)
         # sample_processes has 3 orphans (pid 2, 3, 5)
-        assert len(result) == 3
+        assert len(result) == ORPHAN_COUNT
 
     def test_empty_list(self):
         """Should return empty list for empty input."""
@@ -662,16 +691,16 @@ class TestFilterHighMemory:
 
     def test_filters_above_threshold(self, sample_processes):
         """Should return processes above default threshold."""
-        result = filter_high_memory(sample_processes, threshold_mb=500.0)
-        assert all(p.rss_mb > 500.0 for p in result)
+        result = filter_high_memory(sample_processes, threshold_mb=THRESHOLD_500)
+        assert all(p.rss_mb > THRESHOLD_500 for p in result)
         # sample_processes: python=500 (not >500), app=800
-        assert len(result) == 1
+        assert len(result) == HIGH_MEM_COUNT_1
 
     def test_custom_threshold(self, sample_processes):
         """Should use custom threshold."""
         result = filter_high_memory(sample_processes, threshold_mb=100.0)
         # python=500, node=300, rust=200, app=800 (all > 100)
-        assert len(result) == 4
+        assert len(result) == HIGH_MEM_COUNT_4
 
     def test_empty_list(self):
         """Should return empty list for empty input."""
@@ -685,25 +714,25 @@ class TestSortProcesses:
         """Should sort by memory descending by default."""
         result = sort_processes(sample_processes, sort_by="memory", reverse=True)
         assert result[0].rss_mb >= result[-1].rss_mb
-        assert result[0].pid == 5  # app has 800 MB
+        assert result[0].pid == PID_APP  # app has 800 MB
 
     def test_sort_by_memory_ascending(self, sample_processes):
         """Should sort by memory ascending when reverse=False."""
         result = sort_processes(sample_processes, sort_by="memory", reverse=False)
         assert result[0].rss_mb <= result[-1].rss_mb
-        assert result[0].pid == 4  # zsh has 50 MB
+        assert result[0].pid == PID_ZSH  # zsh has 50 MB
 
     def test_sort_by_cpu(self, sample_processes):
         """Should sort by CPU percent."""
         result = sort_processes(sample_processes, sort_by="cpu", reverse=True)
         assert result[0].cpu_percent >= result[-1].cpu_percent
-        assert result[0].pid == 3  # rust has 50%
+        assert result[0].pid == PID_RUST  # rust has 50%
 
     def test_sort_by_pid(self, sample_processes):
         """Should sort by PID."""
         result = sort_processes(sample_processes, sort_by="pid", reverse=False)
-        assert result[0].pid == 1
-        assert result[-1].pid == 5
+        assert result[0].pid == PID_PYTHON
+        assert result[-1].pid == PID_APP
 
     def test_sort_by_name(self, sample_processes):
         """Should sort by name alphabetically."""
@@ -834,8 +863,8 @@ class TestFilterByCwd:
             make_process(pid=3, cwd="/home/user/other"),
         ]
         result = filter_by_cwd(procs, "/home/user/project")
-        assert len(result) == 2
-        assert {p.pid for p in result} == {1, 2}
+        assert len(result) == CWD_MATCH_COUNT
+        assert {p.pid for p in result} == {PID_PYTHON, PID_NODE}
 
     def test_prefix_match_trailing_slash(self, make_process):
         """Should handle trailing slash in filter path."""
@@ -844,7 +873,7 @@ class TestFilterByCwd:
             make_process(pid=2, cwd="/home/user/project/sub"),
         ]
         result = filter_by_cwd(procs, "/home/user/project/")
-        assert len(result) == 2
+        assert len(result) == CWD_MATCH_COUNT
 
     def test_no_partial_directory_match(self, make_process):
         """Should not match partial directory names."""
@@ -860,23 +889,23 @@ class TestFilterByCwd:
         """Should use glob matching when pattern contains *."""
         procs = [
             make_process(pid=1, cwd="/home/user/project"),
-            make_process(pid=2, cwd="/tmp/build"),
+            make_process(pid=2, cwd=TEST_PATH_BUILD),
             make_process(pid=3, cwd="/home/admin/project"),
         ]
         result = filter_by_cwd(procs, "/home/*/project")
-        assert len(result) == 2
-        assert {p.pid for p in result} == {1, 3}
+        assert len(result) == CWD_MATCH_COUNT
+        assert {p.pid for p in result} == {PID_PYTHON, PID_RUST}
 
     def test_glob_pattern_question_mark(self, make_process):
         """Should use glob matching when pattern contains ?."""
         procs = [
-            make_process(pid=1, cwd="/tmp/a"),
-            make_process(pid=2, cwd="/tmp/b"),
-            make_process(pid=3, cwd="/tmp/ab"),
+            make_process(pid=1, cwd=TEST_PATH_A),
+            make_process(pid=2, cwd=TEST_PATH_B),
+            make_process(pid=3, cwd=TEST_PATH_AB),
         ]
-        result = filter_by_cwd(procs, "/tmp/?")
-        assert len(result) == 2
-        assert {p.pid for p in result} == {1, 2}
+        result = filter_by_cwd(procs, TEST_PATH_GLOB)
+        assert len(result) == CWD_MATCH_COUNT
+        assert {p.pid for p in result} == {PID_PYTHON, PID_NODE}
 
     def test_excludes_unknown_cwd(self, make_process):
         """Should exclude processes with unknown cwd (?)."""
@@ -900,7 +929,7 @@ class TestFilterByCwd:
 
     def test_empty_result(self, make_process):
         """Should return empty list when no matches."""
-        procs = [make_process(pid=1, cwd="/tmp")]
+        procs = [make_process(pid=1, cwd=TEST_PATH_SINGLE)]
         result = filter_by_cwd(procs, "/home/user")
         assert result == []
 
@@ -915,14 +944,14 @@ class TestSortByCwd:
     def test_sort_by_cwd_ascending(self, make_process):
         """Should sort by cwd alphabetically ascending."""
         procs = [
-            make_process(pid=1, cwd="/tmp/z"),
+            make_process(pid=1, cwd=TEST_PATH_Z),
             make_process(pid=2, cwd="/home/a"),
             make_process(pid=3, cwd="/var/m"),
         ]
         result = sort_processes(procs, sort_by="cwd", reverse=False)
         assert result[0].cwd == "/home/a"
-        assert result[1].cwd == "/tmp/z"
-        assert result[2].cwd == "/var/m"
+        assert result[1].cwd == "/var/m"
+        assert result[2].cwd == TEST_PATH_Z
 
     def test_sort_by_cwd_descending(self, make_process):
         """Should sort by cwd descending."""
@@ -942,7 +971,7 @@ class TestSortByCwd:
         ]
         # Should not raise
         result = sort_processes(procs, sort_by="cwd", reverse=False)
-        assert len(result) == 2
+        assert len(result) == CWD_MATCH_COUNT
 
 
 class TestConstants:
