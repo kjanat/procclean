@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 from textual.widgets import OptionList, Static
 
-from procclean.app import main
+from procclean import main
 from procclean.tui import ConfirmKillScreen, ProcessCleanerApp
 
 

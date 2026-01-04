@@ -14,7 +14,7 @@ from textual.widgets import (
 )
 from textual.widgets.option_list import Option
 
-from ..core import (
+from procclean.core import (
     ProcessInfo,
     filter_by_cwd,
     find_similar_processes,
@@ -22,6 +22,7 @@ from ..core import (
     get_process_list,
     kill_processes,
 )
+
 from .screens import ConfirmKillScreen
 
 

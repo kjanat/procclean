@@ -1,0 +1,10 @@
+{
+  "file_types": {
+    "Shell Script": ["pc"],
+  },
+  "languages": {
+    "Python": {
+      "language_servers": ["!pylsp", "ruff", "ty", "..."],
+    },
+  },
+}

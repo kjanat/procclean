@@ -4,7 +4,8 @@ from importlib.metadata import version
 
 __version__ = version("procclean")
 
-# Re-export core types for convenience
-from .core import ProcessInfo
+# Re-export main entry point and core types
+from procclean.__main__ import main
+from procclean.core import ProcessInfo
 
-__all__ = ["ProcessInfo", "__version__"]
+__all__ = ["ProcessInfo", "__version__", "main"]

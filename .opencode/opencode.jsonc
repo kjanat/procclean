@@ -2,30 +2,13 @@
   "$schema": "https://opencode.ai/config.json",
   "lsp": {
     "ruff": {
-      "command": [
-        ".venv/bin/ruff",
-        "server",
-        "--preview",
-      ],
-      "extensions": [
-        ".py",
-        ".pyi",
-        ".ipynb",
-      ],
+      "command": [".venv/bin/ruff", "server", "--preview"],
+      "extensions": [".py", ".pyi", ".ipynb"],
     },
     "ty": {
-      "command": [
-        ".venv/bin/ty",
-        "server",
-      ],
-      "extensions": [
-        ".py",
-        ".pyi",
-        ".ipynb",
-      ],
+      "command": [".venv/bin/ty", "server"],
+      "extensions": [".py", ".pyi", ".ipynb"],
     },
-    "pyright": {
-      "disabled": true,
-    },
+    // "pyright": { "disabled": true },
   },
 }

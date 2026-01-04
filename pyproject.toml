@@ -30,7 +30,7 @@ Homepage = "https://github.com/kjanat/procclean"
 Repository = "https://github.com/kjanat/procclean"
 
 [project.scripts]
-procclean = "procclean.app:main"
+procclean = "procclean:main"
 
 [dependency-groups]
 dev = [

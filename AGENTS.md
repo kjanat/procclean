@@ -27,11 +27,10 @@
 
 ## Structure
 
-```
+```tree
 src/procclean/
-  __init__.py       # Package init, __version__, re-exports
-  __main__.py       # Entry point (calls app.main)
-  app.py            # main() dispatcher (CLI vs TUI)
+  __init__.py       # Package init, __version__, main, ProcessInfo
+  __main__.py       # Entry point, main() dispatcher (CLI vs TUI)
   core/             # Business logic (no UI deps)
     __init__.py     # Re-exports all core symbols
     models.py       # ProcessInfo dataclass
@@ -50,7 +49,9 @@ src/procclean/
     app.tcss        # Textual CSS styles
     screens.py      # ConfirmKillScreen
   formatters/       # Output formatters
-    __init__.py     # All formatter code (single file)
+    __init__.py     # Re-exports
+    columns.py      # ColumnSpec, COLUMNS, DEFAULT_COLUMNS
+    output.py       # format_table, format_json, format_csv, format_md
 ```
 
 ## CLI Usage

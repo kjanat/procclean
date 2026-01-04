@@ -75,4 +75,8 @@ uv run pytest
 
 ## License
 
-MIT
+[MIT][license]
+
+<!--link definitions-->
+
+[license]: https://github.com/kjanat/procclean/blob/master/LICENSE "MIT License"

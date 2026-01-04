@@ -5,7 +5,7 @@ import json
 import os
 import sys
 
-from ..core import (
+from procclean.core import (
     filter_by_cwd,
     filter_high_memory,
     filter_killable,
@@ -16,7 +16,7 @@ from ..core import (
     kill_processes,
     sort_processes,
 )
-from ..formatters import format_output
+from procclean.formatters import format_output
 
 
 def cmd_list(args: argparse.Namespace) -> int:

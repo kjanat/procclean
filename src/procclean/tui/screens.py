@@ -6,7 +6,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Label
 
-from ..core import ProcessInfo
+from procclean.core import ProcessInfo
 
 
 class ConfirmKillScreen(ModalScreen[bool]):

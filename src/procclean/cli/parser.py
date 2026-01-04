@@ -3,7 +3,8 @@
 import argparse
 from importlib.metadata import version
 
-from ..formatters import get_available_columns
+from procclean.formatters import get_available_columns
+
 from .commands import cmd_groups, cmd_kill, cmd_list, cmd_memory
 
 
