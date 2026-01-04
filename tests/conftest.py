@@ -2,7 +2,7 @@
 
 import pytest
 
-from procclean.process_analyzer import ProcessInfo
+from procclean.core import ProcessInfo
 
 
 @pytest.fixture

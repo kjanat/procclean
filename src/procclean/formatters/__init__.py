@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from tabulate import tabulate
 
-from .process_analyzer import ProcessInfo
+from ..core import ProcessInfo
 
 
 def clip_right(s: str, max_len: int) -> str:
@@ -215,3 +215,21 @@ def format_output(
 def get_available_columns() -> list[str]:
     """Return list of available column keys."""
     return list(COLUMNS.keys())
+
+
+__all__ = [
+    "COLUMNS",
+    "DEFAULT_COLUMNS",
+    "ColumnSpec",
+    "clip_left",
+    "clip_right",
+    "fmt_float1",
+    "fmt_status",
+    "format_csv",
+    "format_json",
+    "format_markdown",
+    "format_output",
+    "format_table",
+    "get_available_columns",
+    "get_rows",
+]

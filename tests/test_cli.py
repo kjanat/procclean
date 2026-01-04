@@ -200,8 +200,8 @@ class TestCreateParser:
 class TestCmdList:
     """Tests for cmd_list function."""
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.format_output")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.format_output")
     def test_outputs_table_format(self, mock_format, mock_get_procs, capsys):
         """Should call format_output and print result."""
         mock_get_procs.return_value = []
@@ -216,10 +216,10 @@ class TestCmdList:
         captured = capsys.readouterr()
         assert "formatted output" in captured.out
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.filter_orphans")
-    @patch("procclean.cli.sort_processes")
-    @patch("procclean.cli.format_output")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.filter_orphans")
+    @patch("procclean.cli.commands.sort_processes")
+    @patch("procclean.cli.commands.format_output")
     def test_filters_orphans(
         self, mock_format, mock_sort, mock_filter, mock_get_procs, sample_processes
     ):
@@ -235,10 +235,10 @@ class TestCmdList:
 
         mock_filter.assert_called_once_with(sample_processes)
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.filter_killable")
-    @patch("procclean.cli.sort_processes")
-    @patch("procclean.cli.format_output")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.filter_killable")
+    @patch("procclean.cli.commands.sort_processes")
+    @patch("procclean.cli.commands.format_output")
     def test_filters_killable(
         self, mock_format, mock_sort, mock_filter, mock_get_procs, sample_processes
     ):
@@ -254,10 +254,10 @@ class TestCmdList:
 
         mock_filter.assert_called_once_with(sample_processes)
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.filter_high_memory")
-    @patch("procclean.cli.sort_processes")
-    @patch("procclean.cli.format_output")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.filter_high_memory")
+    @patch("procclean.cli.commands.sort_processes")
+    @patch("procclean.cli.commands.format_output")
     def test_filters_high_memory(
         self, mock_format, mock_sort, mock_filter, mock_get_procs, sample_processes
     ):
@@ -273,9 +273,9 @@ class TestCmdList:
 
         mock_filter.assert_called_once_with(sample_processes, threshold_mb=400.0)
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.sort_processes")
-    @patch("procclean.cli.format_output")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.sort_processes")
+    @patch("procclean.cli.commands.format_output")
     def test_sorts_processes(
         self, mock_format, mock_sort, mock_get_procs, sample_processes
     ):
@@ -292,9 +292,9 @@ class TestCmdList:
             sample_processes, sort_by="cpu", reverse=False
         )
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.sort_processes")
-    @patch("procclean.cli.format_output")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.sort_processes")
+    @patch("procclean.cli.commands.format_output")
     def test_limits_output(
         self, mock_format, mock_sort, mock_get_procs, sample_processes
     ):
@@ -311,10 +311,10 @@ class TestCmdList:
         call_args = mock_format.call_args[0]
         assert len(call_args[0]) == 2
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.filter_by_cwd")
-    @patch("procclean.cli.sort_processes")
-    @patch("procclean.cli.format_output")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.filter_by_cwd")
+    @patch("procclean.cli.commands.sort_processes")
+    @patch("procclean.cli.commands.format_output")
     def test_filters_by_cwd_with_path(
         self, mock_format, mock_sort, mock_filter, mock_get_procs, sample_processes
     ):
@@ -331,10 +331,10 @@ class TestCmdList:
         mock_filter.assert_called_once_with(sample_processes, "/home/user/project")
 
     @patch("os.getcwd", return_value="/current/working/dir")
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.filter_by_cwd")
-    @patch("procclean.cli.sort_processes")
-    @patch("procclean.cli.format_output")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.filter_by_cwd")
+    @patch("procclean.cli.commands.sort_processes")
+    @patch("procclean.cli.commands.format_output")
     def test_filters_by_cwd_empty_uses_getcwd(
         self,
         mock_format,
@@ -360,8 +360,8 @@ class TestCmdList:
 class TestCmdGroups:
     """Tests for cmd_groups function."""
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.find_similar_processes")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.find_similar_processes")
     def test_no_groups_found(self, mock_find, mock_get_procs, capsys):
         """Should print message when no groups found."""
         mock_get_procs.return_value = []
@@ -375,8 +375,8 @@ class TestCmdGroups:
         captured = capsys.readouterr()
         assert "No process groups found" in captured.out
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.find_similar_processes")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.find_similar_processes")
     def test_json_output(self, mock_find, mock_get_procs, sample_processes, capsys):
         """Should output JSON when format is json."""
         mock_get_procs.return_value = sample_processes
@@ -391,8 +391,8 @@ class TestCmdGroups:
         data = json.loads(captured.out)
         assert "python" in data
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.find_similar_processes")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.find_similar_processes")
     def test_table_output(self, mock_find, mock_get_procs, sample_processes, capsys):
         """Should output formatted text when format is table."""
         mock_get_procs.return_value = sample_processes
@@ -411,8 +411,8 @@ class TestCmdGroups:
 class TestCmdKill:
     """Tests for cmd_kill function."""
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.kill_processes")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.kill_processes")
     def test_with_yes_flag(self, mock_kill, mock_get, sample_processes, capsys):
         """Should skip confirmation when -y flag set."""
         mock_get.return_value = sample_processes
@@ -427,8 +427,8 @@ class TestCmdKill:
         captured = capsys.readouterr()
         assert "[OK]" in captured.out
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.kill_processes")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.kill_processes")
     def test_with_force_flag(self, mock_kill, mock_get, sample_processes, capsys):
         """Should pass force=True when -f flag set."""
         mock_get.return_value = sample_processes
@@ -440,8 +440,8 @@ class TestCmdKill:
 
         mock_kill.assert_called_once_with([1], force=True)
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.kill_processes")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.kill_processes")
     def test_returns_exit_code_on_failure(
         self, mock_kill, mock_get, sample_processes, capsys
     ):
@@ -461,8 +461,8 @@ class TestCmdKill:
         assert "[OK]" in captured.out
         assert "[FAILED]" in captured.out
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.kill_processes")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.kill_processes")
     @patch("sys.stdin")
     @patch("builtins.input", return_value="n")
     def test_confirmation_abort(
@@ -481,8 +481,8 @@ class TestCmdKill:
         captured = capsys.readouterr()
         assert "Aborted" in captured.out
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.kill_processes")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.kill_processes")
     @patch("sys.stdin")
     @patch("builtins.input", return_value="y")
     def test_confirmation_yes(
@@ -500,8 +500,8 @@ class TestCmdKill:
         assert result == 0
         mock_kill.assert_called_once()
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.kill_processes")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.kill_processes")
     @patch("sys.stdin")
     @patch("builtins.input", side_effect=EOFError)
     def test_confirmation_eof(
@@ -519,9 +519,9 @@ class TestCmdKill:
         assert result == 0
         mock_kill.assert_called_once()
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.filter_by_cwd")
-    @patch("procclean.cli.kill_processes")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.filter_by_cwd")
+    @patch("procclean.cli.commands.kill_processes")
     def test_kill_with_cwd_filter(
         self, mock_kill, mock_filter, mock_get_procs, sample_processes, capsys
     ):
@@ -541,9 +541,9 @@ class TestCmdKill:
         mock_filter.assert_called_once_with(sample_processes, "/home/user")
         mock_kill.assert_called_once_with([1, 2], force=False)
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.filter_by_cwd")
-    @patch("procclean.cli.kill_processes")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.filter_by_cwd")
+    @patch("procclean.cli.commands.kill_processes")
     @patch("os.getcwd")
     def test_kill_with_cwd_empty_uses_getcwd(
         self, mock_getcwd, mock_kill, mock_filter, mock_get_procs, sample_processes
@@ -560,8 +560,8 @@ class TestCmdKill:
 
         mock_filter.assert_called_once_with(sample_processes, "/current/dir")
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.filter_by_cwd")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.filter_by_cwd")
     def test_kill_with_no_matches(self, mock_filter, mock_get_procs, capsys):
         """Should print message when no processes match filters."""
         mock_get_procs.return_value = []
@@ -579,7 +579,7 @@ class TestCmdKill:
 class TestCmdMemory:
     """Tests for cmd_memory function."""
 
-    @patch("procclean.cli.get_memory_summary")
+    @patch("procclean.cli.commands.get_memory_summary")
     def test_json_output(self, mock_mem, capsys):
         """Should output JSON when format is json."""
         mock_mem.return_value = {
@@ -600,7 +600,7 @@ class TestCmdMemory:
         data = json.loads(captured.out)
         assert data["total_gb"] == 16.0
 
-    @patch("procclean.cli.get_memory_summary")
+    @patch("procclean.cli.commands.get_memory_summary")
     def test_table_output(self, mock_mem, capsys):
         """Should output formatted text when format is table."""
         mock_mem.return_value = {
@@ -627,7 +627,7 @@ class TestCmdMemory:
 class TestGetFilteredProcesses:
     """Tests for get_filtered_processes function."""
 
-    @patch("procclean.cli.get_process_list")
+    @patch("procclean.cli.commands.get_process_list")
     def test_returns_all_when_no_filters(self, mock_get, sample_processes):
         """Should return all processes when no filters applied."""
         mock_get.return_value = sample_processes
@@ -638,8 +638,8 @@ class TestGetFilteredProcesses:
 
         assert result == sample_processes
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.filter_killable")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.filter_killable")
     def test_applies_killable_filter(self, mock_filter, mock_get, sample_processes):
         """Should apply killable filter."""
         mock_get.return_value = sample_processes
@@ -652,8 +652,8 @@ class TestGetFilteredProcesses:
         mock_filter.assert_called_once()
         assert result == sample_processes[:1]
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.filter_by_cwd")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.filter_by_cwd")
     def test_applies_cwd_filter(self, mock_filter, mock_get, sample_processes):
         """Should apply cwd filter."""
         mock_get.return_value = sample_processes
@@ -670,7 +670,7 @@ class TestGetFilteredProcesses:
 class TestGetKillTargets:
     """Tests for _get_kill_targets function."""
 
-    @patch("procclean.cli.get_process_list")
+    @patch("procclean.cli.commands.get_process_list")
     def test_with_explicit_pids(self, mock_get, sample_processes, capsys):
         """Should filter by explicit PIDs."""
         mock_get.return_value = sample_processes
@@ -682,7 +682,7 @@ class TestGetKillTargets:
         assert len(result) == 2
         assert {p.pid for p in result} == {1, 2}
 
-    @patch("procclean.cli.get_process_list")
+    @patch("procclean.cli.commands.get_process_list")
     def test_warns_missing_pids(self, mock_get, sample_processes, capsys):
         """Should warn about PIDs not found."""
         mock_get.return_value = sample_processes
@@ -694,7 +694,7 @@ class TestGetKillTargets:
         captured = capsys.readouterr()
         assert "Warning: PID 9999 not found" in captured.out
 
-    @patch("procclean.cli.get_filtered_processes")
+    @patch("procclean.cli.commands.get_filtered_processes")
     def test_uses_filters_when_no_pids(self, mock_filter, sample_processes):
         """Should use filters when no explicit PIDs."""
         mock_filter.return_value = sample_processes
@@ -710,7 +710,7 @@ class TestGetKillTargets:
 class TestDoPreview:
     """Tests for _do_preview function."""
 
-    @patch("procclean.cli.format_output")
+    @patch("procclean.cli.commands.format_output")
     def test_outputs_formatted_list(self, mock_format, sample_processes, capsys):
         """Should output formatted process list."""
         mock_format.return_value = "formatted output"
@@ -725,8 +725,8 @@ class TestDoPreview:
         assert "formatted output" in captured.out
         assert "would be killed" in captured.out
 
-    @patch("procclean.cli.sort_processes")
-    @patch("procclean.cli.format_output")
+    @patch("procclean.cli.commands.sort_processes")
+    @patch("procclean.cli.commands.format_output")
     def test_applies_sort(self, mock_format, mock_sort, sample_processes):
         """Should apply sorting when specified."""
         mock_sort.return_value = sample_processes
@@ -738,7 +738,7 @@ class TestDoPreview:
 
         mock_sort.assert_called_once_with(sample_processes, sort_by="cpu", reverse=True)
 
-    @patch("procclean.cli.format_output")
+    @patch("procclean.cli.commands.format_output")
     def test_applies_limit(self, mock_format, sample_processes):
         """Should apply limit when specified."""
         mock_format.return_value = ""
@@ -751,7 +751,7 @@ class TestDoPreview:
         call_args = mock_format.call_args[0]
         assert len(call_args[0]) == 2
 
-    @patch("procclean.cli.format_output")
+    @patch("procclean.cli.commands.format_output")
     def test_uses_specified_format(self, mock_format, sample_processes):
         """Should use specified output format."""
         mock_format.return_value = ""
@@ -849,9 +849,9 @@ class TestConfirmKill:
 class TestCmdKillPreview:
     """Tests for cmd_kill preview mode."""
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.filter_killable")
-    @patch("procclean.cli.format_output")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.filter_killable")
+    @patch("procclean.cli.commands.format_output")
     def test_preview_does_not_kill(
         self, mock_format, mock_filter, mock_get, sample_processes, capsys
     ):
@@ -869,9 +869,9 @@ class TestCmdKillPreview:
         assert "preview output" in captured.out
         assert "would be killed" in captured.out
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.filter_killable")
-    @patch("procclean.cli.format_output")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.filter_killable")
+    @patch("procclean.cli.commands.format_output")
     def test_preview_json_format(
         self, mock_format, mock_filter, mock_get, sample_processes
     ):
@@ -897,9 +897,9 @@ class TestRunCli:
         result = run_cli([])
         assert result == -1
 
-    @patch("procclean.cli.get_process_list")
-    @patch("procclean.cli.sort_processes")
-    @patch("procclean.cli.format_output")
+    @patch("procclean.cli.commands.get_process_list")
+    @patch("procclean.cli.commands.sort_processes")
+    @patch("procclean.cli.commands.format_output")
     def test_routes_to_list_command(self, mock_format, mock_sort, mock_get):
         """Should route to list command handler."""
         mock_get.return_value = []
@@ -910,7 +910,7 @@ class TestRunCli:
         assert result == 0
         mock_get.assert_called_once()
 
-    @patch("procclean.cli.get_memory_summary")
+    @patch("procclean.cli.commands.get_memory_summary")
     def test_routes_to_memory_command(self, mock_mem, capsys):
         """Should route to memory command handler."""
         mock_mem.return_value = {

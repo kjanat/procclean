@@ -5,7 +5,8 @@ from unittest.mock import patch
 import pytest
 from textual.widgets import OptionList, Static
 
-from procclean.app import ConfirmKillScreen, ProcessCleanerApp, main
+from procclean.app import main
+from procclean.tui import ConfirmKillScreen, ProcessCleanerApp
 
 
 @pytest.fixture
@@ -17,10 +18,10 @@ def mock_process_data(sample_processes):
 
     """
     with (
-        patch("procclean.app.get_process_list") as mock_get_procs,
-        patch("procclean.app.get_memory_summary") as mock_mem,
-        patch("procclean.app.find_similar_processes") as mock_find,
-        patch("procclean.app.kill_processes") as mock_kill,
+        patch("procclean.tui.app.get_process_list") as mock_get_procs,
+        patch("procclean.tui.app.get_memory_summary") as mock_mem,
+        patch("procclean.tui.app.find_similar_processes") as mock_find,
+        patch("procclean.tui.app.kill_processes") as mock_kill,
     ):
         mock_get_procs.return_value = sample_processes
         mock_mem.return_value = {
@@ -530,7 +531,7 @@ class TestMainFunction:
     """Tests for main entry point."""
 
     @patch("procclean.cli.run_cli")
-    @patch("procclean.app.ProcessCleanerApp")
+    @patch("procclean.tui.ProcessCleanerApp")
     def test_runs_tui_when_no_subcommand(self, mock_app_class, mock_run_cli):
         """Should run TUI when run_cli returns -1."""
         mock_run_cli.return_value = -1

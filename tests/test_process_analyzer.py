@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import psutil
 import pytest
 
-from procclean.process_analyzer import (
+from procclean.core import (
     CRITICAL_SERVICES,
     SYSTEM_EXE_PATHS,
     filter_by_cwd,
@@ -29,7 +29,7 @@ class TestGetTmuxEnv:
 
     def test_returns_true_when_tmux_in_environ(self, tmp_path):
         """Should return True when TMUX= is in process environ."""
-        with patch("procclean.process_analyzer.Path") as mock_path:
+        with patch("procclean.core.process.Path") as mock_path:
             mock_path.return_value.exists.return_value = True
             mock_path.return_value.read_bytes.return_value = (
                 b"PATH=/bin\x00TMUX=/tmp/tmux\x00"
@@ -38,7 +38,7 @@ class TestGetTmuxEnv:
 
     def test_returns_false_when_no_tmux(self, tmp_path):
         """Should return False when TMUX= is not in environ."""
-        with patch("procclean.process_analyzer.Path") as mock_path:
+        with patch("procclean.core.process.Path") as mock_path:
             mock_path.return_value.exists.return_value = True
             mock_path.return_value.read_bytes.return_value = (
                 b"PATH=/bin\x00HOME=/home/user\x00"
@@ -47,14 +47,14 @@ class TestGetTmuxEnv:
 
     def test_returns_false_on_permission_error(self):
         """Should return False when PermissionError is raised."""
-        with patch("procclean.process_analyzer.Path") as mock_path:
+        with patch("procclean.core.process.Path") as mock_path:
             mock_path.return_value.exists.return_value = True
             mock_path.return_value.read_bytes.side_effect = PermissionError
             assert get_tmux_env(1234) is False
 
     def test_returns_false_when_file_not_exists(self):
         """Should return False when environ file doesn't exist."""
-        with patch("procclean.process_analyzer.Path") as mock_path:
+        with patch("procclean.core.process.Path") as mock_path:
             mock_path.return_value.exists.return_value = False
             assert get_tmux_env(1234) is False
 
@@ -108,8 +108,8 @@ class TestGetProcessList:
             "status": status,
         }
 
-    @patch("procclean.process_analyzer.get_cwd")
-    @patch("procclean.process_analyzer.get_tmux_env")
+    @patch("procclean.core.process.get_cwd")
+    @patch("procclean.core.process.get_tmux_env")
     @patch("psutil.Process")
     @patch("psutil.process_iter")
     @patch("os.getlogin")
@@ -136,7 +136,7 @@ class TestGetProcessList:
         assert result[0].name == "python"
         assert result[0].parent_name == "bash"
 
-    @patch("procclean.process_analyzer.get_cwd")
+    @patch("procclean.core.process.get_cwd")
     @patch("psutil.Process")
     @patch("psutil.process_iter")
     @patch("os.getlogin")
@@ -160,7 +160,7 @@ class TestGetProcessList:
         assert len(result) == 1
         assert result[0].pid == 1
 
-    @patch("procclean.process_analyzer.get_cwd")
+    @patch("procclean.core.process.get_cwd")
     @patch("psutil.Process")
     @patch("psutil.process_iter")
     @patch("os.getlogin")
@@ -186,7 +186,7 @@ class TestGetProcessList:
         assert len(result) == 1
         assert result[0].pid == 1
 
-    @patch("procclean.process_analyzer.get_cwd")
+    @patch("procclean.core.process.get_cwd")
     @patch("psutil.Process")
     @patch("psutil.process_iter")
     @patch("os.getlogin")
@@ -212,7 +212,7 @@ class TestGetProcessList:
 
         assert len(result) == 0
 
-    @patch("procclean.process_analyzer.get_cwd")
+    @patch("procclean.core.process.get_cwd")
     @patch("psutil.Process")
     @patch("psutil.process_iter")
     @patch("os.getlogin")
@@ -234,8 +234,8 @@ class TestGetProcessList:
         assert len(result) == 1
         assert result[0].parent_name == "?"
 
-    @patch("procclean.process_analyzer.get_cwd")
-    @patch("procclean.process_analyzer.get_tmux_env")
+    @patch("procclean.core.process.get_cwd")
+    @patch("procclean.core.process.get_tmux_env")
     @patch("psutil.Process")
     @patch("psutil.process_iter")
     @patch("os.getlogin")
@@ -260,8 +260,8 @@ class TestGetProcessList:
         assert len(result) == 1
         assert result[0].is_orphan is True
 
-    @patch("procclean.process_analyzer.get_cwd")
-    @patch("procclean.process_analyzer.get_tmux_env")
+    @patch("procclean.core.process.get_cwd")
+    @patch("procclean.core.process.get_tmux_env")
     @patch("psutil.Process")
     @patch("psutil.process_iter")
     @patch("os.getlogin")
@@ -288,7 +288,7 @@ class TestGetProcessList:
         assert result[0].in_tmux is True
         mock_tmux.assert_called_once_with(1234)
 
-    @patch("procclean.process_analyzer.get_cwd")
+    @patch("procclean.core.process.get_cwd")
     @patch("psutil.Process")
     @patch("psutil.process_iter")
     @patch("os.getlogin")
@@ -312,7 +312,7 @@ class TestGetProcessList:
         assert result[0].pid == 2  # Higher memory first
         assert result[1].pid == 1
 
-    @patch("procclean.process_analyzer.get_cwd")
+    @patch("procclean.core.process.get_cwd")
     @patch("psutil.Process")
     @patch("psutil.process_iter")
     @patch("os.getlogin")
@@ -336,7 +336,7 @@ class TestGetProcessList:
         assert result[0].pid == 2  # Higher CPU first
         assert result[1].pid == 1
 
-    @patch("procclean.process_analyzer.get_cwd")
+    @patch("procclean.core.process.get_cwd")
     @patch("psutil.Process")
     @patch("psutil.process_iter")
     @patch("os.getlogin")
@@ -360,7 +360,7 @@ class TestGetProcessList:
         assert result[0].name == "bash"  # Alphabetically first
         assert result[1].name == "zsh"
 
-    @patch("procclean.process_analyzer.get_cwd")
+    @patch("procclean.core.process.get_cwd")
     @patch("psutil.Process")
     @patch("psutil.process_iter")
     @patch("os.getlogin")
@@ -395,7 +395,7 @@ class TestGetProcessList:
         assert len(result) == 1
         assert result[0].cmdline == "kernel_proc"
 
-    @patch("procclean.process_analyzer.get_cwd")
+    @patch("procclean.core.process.get_cwd")
     @patch("psutil.Process")
     @patch("psutil.process_iter")
     @patch("os.getlogin")
@@ -417,7 +417,7 @@ class TestGetProcessList:
         # Should be filtered out because 0 MB < 5 MB min
         assert len(result) == 0
 
-    @patch("procclean.process_analyzer.get_cwd")
+    @patch("procclean.core.process.get_cwd")
     @patch("psutil.Process")
     @patch("psutil.process_iter")
     @patch("os.getlogin")
@@ -438,7 +438,7 @@ class TestGetProcessList:
 
         assert len(result) == 0
 
-    @patch("procclean.process_analyzer.get_cwd")
+    @patch("procclean.core.process.get_cwd")
     @patch("psutil.Process")
     @patch("psutil.process_iter")
     @patch("os.getlogin")
@@ -464,7 +464,7 @@ class TestGetProcessList:
         assert len(result) == 1
         assert result[0].pid == 2
 
-    @patch("procclean.process_analyzer.get_cwd")
+    @patch("procclean.core.process.get_cwd")
     @patch("psutil.Process")
     @patch("psutil.process_iter")
     @patch("os.getlogin")
@@ -578,7 +578,7 @@ class TestKillProcesses:
 
     def test_kills_multiple_processes(self):
         """Should return results for each PID."""
-        with patch("procclean.process_analyzer.kill_process") as mock_kill:
+        with patch("procclean.core.process.kill_process") as mock_kill:
             mock_kill.side_effect = [
                 (True, "killed"),
                 (False, "not found"),
@@ -768,7 +768,7 @@ class TestIsSystemService:
 class TestFilterKillable:
     """Tests for filter_killable function."""
 
-    @patch("procclean.process_analyzer.is_system_service")
+    @patch("procclean.core.process.is_system_service")
     def test_filters_non_orphans(self, mock_is_system, make_process):
         """Should exclude non-orphaned processes."""
         mock_is_system.return_value = False
@@ -780,7 +780,7 @@ class TestFilterKillable:
         assert len(result) == 1
         assert result[0].pid == 1
 
-    @patch("procclean.process_analyzer.is_system_service")
+    @patch("procclean.core.process.is_system_service")
     def test_filters_tmux_processes(self, mock_is_system, make_process):
         """Should exclude processes in tmux."""
         mock_is_system.return_value = False
@@ -792,7 +792,7 @@ class TestFilterKillable:
         assert len(result) == 1
         assert result[0].pid == 1
 
-    @patch("procclean.process_analyzer.is_system_service")
+    @patch("procclean.core.process.is_system_service")
     def test_filters_system_services(self, mock_is_system, make_process):
         """Should exclude system services."""
         mock_is_system.side_effect = lambda p: p.name == "pipewire"
@@ -804,7 +804,7 @@ class TestFilterKillable:
         assert len(result) == 1
         assert result[0].name == "firefox"
 
-    @patch("procclean.process_analyzer.is_system_service")
+    @patch("procclean.core.process.is_system_service")
     def test_returns_empty_when_all_filtered(self, mock_is_system, make_process):
         """Should return empty list when all processes are filtered."""
         mock_is_system.return_value = True

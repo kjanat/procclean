@@ -27,10 +27,31 @@
 
 ## Structure
 
-- Source in [`src/procclean/`](./src/procclean/)
-- Entry point: [`app.py:main()`](./src/procclean/app.py)
-- CLI interface: [`cli.py`](./src/procclean/cli.py)
-- Process logic: [`process_analyzer.py`](./src/procclean/process_analyzer.py)
+```
+src/procclean/
+  __init__.py       # Package init, __version__, re-exports
+  __main__.py       # Entry point (calls app.main)
+  app.py            # main() dispatcher (CLI vs TUI)
+  core/             # Business logic (no UI deps)
+    __init__.py     # Re-exports all core symbols
+    models.py       # ProcessInfo dataclass
+    process.py      # get_process_list, find_similar_processes
+    filters.py      # filter_*, sort_processes, is_system_service
+    actions.py      # kill_process, kill_processes
+    memory.py       # get_memory_summary
+    constants.py    # SYSTEM_EXE_PATHS, CRITICAL_SERVICES
+  cli/              # CLI interface
+    __init__.py     # Re-exports
+    parser.py       # create_parser(), run_cli()
+    commands.py     # cmd_list, cmd_kill, cmd_groups, cmd_memory
+  tui/              # TUI interface
+    __init__.py     # Re-exports
+    app.py          # ProcessCleanerApp
+    app.tcss        # Textual CSS styles
+    screens.py      # ConfirmKillScreen
+  formatters/       # Output formatters
+    __init__.py     # All formatter code (single file)
+```
 
 ## CLI Usage
 

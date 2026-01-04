@@ -86,6 +86,9 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
   "PLR0913",  # Too many arguments - mock decorators add params
   "PLR0917",  # Too many positional arguments - same reason
 ]
+"src/procclean/tui/app.py" = [
+  "PLR0904",  # Too many public methods - TUI apps have many action handlers
+]
 
 [format]
 preview = true
