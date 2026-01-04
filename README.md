@@ -12,6 +12,7 @@ hogs, and kill them.
 - **Tmux awareness** - Won't flag tmux processes as orphan candidates
 - **Batch operations** - Select multiple processes and kill them at once
 - **Process grouping** - Find duplicate/similar processes consuming resources
+- **CLI mode** - Scriptable commands with JSON/CSV/Markdown output
 
 ## Installation
 
@@ -27,24 +28,57 @@ uvx git+https://github.com/kjanat/procclean
 
 ## Usage
 
+### TUI Mode (default)
+
 ```bash
 procclean
 ```
 
-## Keybindings
+### CLI Commands
 
-| Key     | Action                        |
-| ------- | ----------------------------- |
-| `Space` | Toggle select process         |
-| `s`     | Select all visible            |
-| `c`     | Clear selection               |
-| `k`     | Kill selected (SIGTERM)       |
-| `K`     | Force kill selected (SIGKILL) |
-| `r`     | Refresh process list          |
-| `o`     | Show orphaned processes       |
-| `a`     | Show all processes            |
-| `g`     | Show process groups           |
-| `q`     | Quit                          |
+```bash
+procclean list                      # List processes (table)
+procclean list -f json|csv|md       # Different output formats
+procclean list -s mem|cpu|pid|name|cwd  # Sort by field
+procclean list -o                   # Orphans only
+procclean list -m                   # High memory only
+procclean list -k                   # Killable orphans only
+procclean list --cwd                # Filter by current directory
+procclean list --cwd /path/to/dir   # Filter by specific cwd
+
+procclean groups                    # Show process groups
+
+procclean kill <PID> [PID...]       # Kill process(es)
+procclean kill -f <PID>             # Force kill (SIGKILL)
+procclean kill --cwd /path -y       # Kill all in cwd (skip confirm)
+procclean kill -k -y                # Kill all killable orphans
+procclean kill -k --preview         # Preview what would be killed
+
+procclean mem                       # Show memory summary
+```
+
+## TUI Keybindings
+
+| Key     | Action                  |
+| ------- | ----------------------- |
+| `q`     | Quit                    |
+| `r`     | Refresh                 |
+| `k`     | Kill selected (SIGTERM) |
+| `K`     | Force kill (SIGKILL)    |
+| `o`     | Show orphans            |
+| `a`     | Show all                |
+| `g`     | Show groups             |
+| `w`     | Filter by selected cwd  |
+| `W`     | Clear cwd filter        |
+| `Space` | Toggle selection        |
+| `s`     | Select all visible      |
+| `c`     | Clear selection         |
+| `1`     | Sort by memory          |
+| `2`     | Sort by CPU             |
+| `3`     | Sort by PID             |
+| `4`     | Sort by name            |
+| `5`     | Sort by cwd             |
+| `!`     | Reverse sort order      |
 
 ## Views
 
@@ -52,6 +86,15 @@ procclean
 - **Orphaned** - Processes with PPID=1 (parent died)
 - **Process Groups** - Similar processes grouped together
 - **High Memory** - Processes using >500MB RAM
+
+## Output Formats
+
+CLI supports multiple output formats via `-f`:
+
+- `table` - Human-readable table (default)
+- `json` - JSON array for scripting
+- `csv` - CSV for spreadsheets
+- `md` - Markdown table
 
 ## Requirements
 
