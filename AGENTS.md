@@ -27,6 +27,32 @@
   `git tag -s -f v0.X.0 <SHA> -m "..."`\
   (without SHA, tag goes to HEAD - wrong!)
 
+## Code Review Guidelines
+
+**Verify before claiming.** Every assertion in a code review must be validated
+against authoritative sources (official docs, Context7, actual testing) *before*
+presenting to the user.
+
+**Know your tools.** Understand the technologies being reviewed:
+
+- YAML `|` block scalar strips common leading indentation automatically
+- GitHub Actions `run: |` passes clean content to the shell
+- Don't claim bugs in behavior you don't fully understand
+
+**Express uncertainty.** If unsure, say "I'm not certain about X, let me verify"
+instead of presenting speculation as fact.
+
+**Stop after correction.** When proven wrong on one claim, re-verify *all*
+claims in the review before proceeding.
+
+**Don't "fix" working code.** Even if something looks wrong, verify it's
+actually broken before touching it. Making readable code uglier is not a fix.
+
+**Read context, not just diffs.** A heredoc inside `run: |` behaves differently
+than a standalone heredoc. Understand the full context before judging.
+
+**Core principle:** Confidence without verification is the root failure.
+
 ## Code Style
 
 - Python 3.14+, use modern type syntax: `list[X]`, `dict[K,V]`, `X | None`

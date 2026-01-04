@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+---
+site_name: procclean
+site_url: https://kjanat.github.io/procclean
+site_description: Interactive TUI for exploring and cleaning up processes
+site_author: Kaj Kowalski
+
+repo_name: kjanat/procclean
+repo_url: https://github.com/kjanat/procclean
+
+docs_dir: ../docs
+site_dir: out
+
+dev_addr: "0.0.0.0:8000"
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - content.code.copy
+    - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - search.suggest
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - CLI Reference: cli.md
+  - TUI Guide: tui.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - tables

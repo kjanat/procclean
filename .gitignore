@@ -140,7 +140,7 @@ venv.bak/
 .ropeproject
 
 # mkdocs documentation
-/site
+/site/out
 
 # mypy
 .mypy_cache/

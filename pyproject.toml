@@ -46,6 +46,10 @@ dev = [
   "textual-dev>=1.8.0",
   "ty>=0.0.8",
 ]
+site = [
+  "mkdocs>=1.6.1",
+  "mkdocs-material>=9.7.1",
+]
 
 [build-system]
 requires = ["uv_build>=0.9.21,<0.10.0"]
@@ -53,3 +57,4 @@ build-backend = "uv_build"
 
 [tool.uv]
 environments = ["sys_platform == 'linux'"]
+default-groups = "all"
