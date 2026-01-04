@@ -6,6 +6,8 @@ Launch the TUI with:
 procclean
 ```
 
+![TUI Main View](assets/screenshots/tui-main.svg)
+
 ## Keybindings
 
 | Key     | Action                  |
@@ -40,6 +42,8 @@ Shows all user processes sorted by memory usage.
 Processes with PPID=1 (parent process died). Tmux processes are excluded from
 orphan detection.
 
+![Orphans View](assets/screenshots/tui-orphans.svg)
+
 ### Process Groups
 
 Similar processes grouped together - useful for finding duplicate instances
@@ -48,6 +52,14 @@ consuming resources.
 ### High Memory
 
 Processes using more than 500MB RAM.
+
+![High Memory View](assets/screenshots/tui-high-memory.svg)
+
+### Selection
+
+Use `Space` to toggle selection on processes:
+
+![Selected Processes](assets/screenshots/tui-selected.svg)
 
 ## Workflow
 

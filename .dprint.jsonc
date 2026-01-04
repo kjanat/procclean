@@ -24,11 +24,20 @@
       {
         /** Formats toml files */
         "command": "uvx tombi format --stdin-filename {{file_path}} -",
-        "exts": ["toml"],
+        "exts": [
+          "toml"
+        ],
       },
     ],
   },
-  "excludes": ["**/uv.lock", "**/.*_cache", "**/.venv", "**/dist", "**/out"],
+  "excludes": [
+    "**/.*_cache",
+    "**/.venv",
+    "**/dist",
+    "**/out",
+    "**/screenshots",
+    "**/uv.lock",
+  ],
   "plugins": [
     "https://plugins.dprint.dev/json-0.21.1.wasm",
     "https://plugins.dprint.dev/markdown-0.20.0.wasm",

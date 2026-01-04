@@ -34,6 +34,9 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
+      - name: Generate TUI screenshots
+        run: uv run python scripts/generate_screenshots.py
+
       - name: Check pngquant availability
         id: check-pngquant
         run: echo "available=$(command -v pngquant >/dev/null && echo true || echo false)" >> "$GITHUB_OUTPUT"
