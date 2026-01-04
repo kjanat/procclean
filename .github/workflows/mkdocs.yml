@@ -33,6 +33,7 @@ jobs:
 
       - name: Install pngquant
         run: sudo apt-get install pngquant
+        continue-on-error: true
 
       - name: Install dependencies
         run: uv sync
@@ -52,15 +53,6 @@ jobs:
           PNGQUANT: ${{ steps.check-pngquant.outputs.available }}
           TTY_COMPATIBLE: "1"
           TTY_INTERACTIVE: "0"
-
-      - name: Create robots.txt to block indexing
-        working-directory: site
-        run: |
-          cat > out/robots.txt << 'EOF'
-          # Block all search engine crawlers
-          User-agent: *
-          Disallow: /
-          EOF
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4

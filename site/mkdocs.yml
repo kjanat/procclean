@@ -85,12 +85,14 @@ markdown_extensions:
 hooks:
   - hooks/ensure_cli_docs.py
   - hooks/ensure_screenshots.py
+  - hooks/robots_txt.py
 
 watch:
   - includes
 
 extra:
   generator: false
+  private: !ENV [PRIVATE, false] # Set PRIVATE=true to block indexing
 
 extra_css:
   - stylesheets/extra.css
