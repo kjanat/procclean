@@ -3,17 +3,14 @@
 import csv
 import io
 import json
+from collections.abc import Sequence
 from dataclasses import asdict, fields
-from typing import TYPE_CHECKING
 
 from tabulate import tabulate
 
 from procclean.core import ProcessInfo
 
 from .columns import COLUMNS, DEFAULT_COLUMNS
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
 
 
 def get_rows(

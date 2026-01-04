@@ -1,9 +1,9 @@
 """CLI command handlers."""
 
+import argparse
 import json
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from rich import print  # pylint: disable=redefined-builtin
 
@@ -20,9 +20,6 @@ from procclean.core import (
     sort_processes,
 )
 from procclean.formatters import format_output
-
-if TYPE_CHECKING:
-    import argparse
 
 
 def cmd_list(args: argparse.Namespace) -> int:

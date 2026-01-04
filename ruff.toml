@@ -31,7 +31,9 @@ exclude = [
 ]
 line-length = 88
 indent-width = 4
-target-version = "py314"
+# Intentionally deviates from pyproject.toml (py314)
+# as exception tuples without parentheses interfere with some parsers
+target-version = "py313"
 
 [lint]
 preview = true

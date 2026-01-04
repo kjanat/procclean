@@ -316,7 +316,7 @@ def optimize_svgs(output_dir: Path) -> bool:
             capture_output=True,
         )
         return True
-    except subprocess.CalledProcessError, FileNotFoundError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         return False
 
 

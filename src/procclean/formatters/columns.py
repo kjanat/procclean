@@ -1,13 +1,11 @@
 """Column specifications for process tables."""
 
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 from enum import StrEnum, auto
-from typing import TYPE_CHECKING, Self
+from typing import Self
 
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from procclean.core import ProcessInfo
+from procclean.core import ProcessInfo
 
 
 class ClipSide(StrEnum):

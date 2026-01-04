@@ -1,19 +1,15 @@
 """TUI modal screens."""
 
-from typing import TYPE_CHECKING, ClassVar
+from typing import ClassVar
 
 from textual import on
+from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Label
 
-from procclean.core import CONFIRM_PREVIEW_LIMIT
-
-if TYPE_CHECKING:
-    from textual.app import ComposeResult
-
-    from procclean.core import ProcessInfo
+from procclean.core import CONFIRM_PREVIEW_LIMIT, ProcessInfo
 
 
 class ConfirmKillScreen(ModalScreen[bool]):

@@ -1,20 +1,35 @@
 {
-  "prettier": { "allowed": false },
+  "prettier": {
+    "allowed": false
+  },
   "file_types": {
-    "Shell Script": ["pc"],
-    "XML": ["svg"],
+    "Shell Script": [
+      "pc"
+    ],
+    "XML": [
+      "svg"
+    ],
   },
   "languages": {
     "Python": {
-      "language_servers": ["!pylsp", "ruff", "ty", "..."],
+      "language_servers": [
+        "!pylsp",
+        "ruff",
+        "ty",
+        "..."
+      ],
     },
-    "XML": { "formatter": [] },
+    "XML": {
+      "formatter": []
+    },
   },
   "lsp": {
     "yaml-language-server": {
       "settings": {
         "yaml": {
-          "schemaStore": { "enable": true },
+          "schemaStore": {
+            "enable": true
+          },
           "customTags": [
             "!ENV scalar",
             "!ENV sequence",
@@ -23,6 +38,7 @@
             "tag:yaml.org,2002:python/name:material.extensions.emoji.twemoji",
             "tag:yaml.org,2002:python/name:pymdownx.superfences.fence_code_format",
             "tag:yaml.org,2002:python/object/apply:pymdownx.slugs.slugify mapping",
+            "emoji_index: !!python/name:material.extensions.emoji.twemoji"
           ],
         },
       },

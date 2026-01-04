@@ -1,14 +1,11 @@
 """Process filtering and sorting utilities."""
 
 import fnmatch
-from typing import TYPE_CHECKING
 
 import psutil
 
 from .constants import CRITICAL_SERVICES, SYSTEM_EXE_PATHS
-
-if TYPE_CHECKING:
-    from .models import ProcessInfo
+from .models import ProcessInfo
 
 
 def is_system_service(proc: ProcessInfo) -> bool:
@@ -26,7 +23,7 @@ def is_system_service(proc: ProcessInfo) -> bool:
         exe = psutil.Process(proc.pid).exe() or ""
         if exe.startswith(SYSTEM_EXE_PATHS):
             return True
-    except psutil.NoSuchProcess, psutil.AccessDenied:
+    except (psutil.NoSuchProcess, psutil.AccessDenied):
         pass
 
     # Check critical services by name
