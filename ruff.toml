@@ -79,6 +79,14 @@ fixable = ["ALL"]
 unfixable = []
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
+[lint.per-file-ignores]
+"tests/**/*.py" = [
+  "PLC2701",  # Private name import - OK for testing internal functions
+  "PLR0904",  # Too many public methods - test classes are large
+  "PLR0913",  # Too many arguments - mock decorators add params
+  "PLR0917",  # Too many positional arguments - same reason
+]
+
 [format]
 preview = true
 quote-style = "double"

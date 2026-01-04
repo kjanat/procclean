@@ -49,6 +49,9 @@ procclean kill <PID> [PID...]       # Kill process(es)
 procclean kill -f <PID>             # Force kill (SIGKILL)
 procclean kill --cwd /path -y       # Kill all in cwd (with confirm skip)
 procclean kill -k -y                # Kill all killable orphans
+procclean kill -k --preview         # Preview what would be killed
+procclean kill -k --dry-run         # Alias for --preview
+procclean kill -k --preview -O json # Preview in JSON format
 procclean mem                       # Show memory summary
 ```
 

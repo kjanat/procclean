@@ -60,7 +60,7 @@ def long_cwd_processes(make_process):
     ]
 
 
-class TestProcessCleanerApp:  # noqa: PLR0904
+class TestProcessCleanerApp:
     """Tests for ProcessCleanerApp TUI."""
 
     @pytest.mark.asyncio
@@ -556,7 +556,7 @@ class TestDunderMain:
 
     def test_imports_main(self):
         """Should be able to import main from __main__."""
-        import procclean.__main__ as dunder_main  # noqa: PLC0415, PLC2701
+        import procclean.__main__ as dunder_main  # noqa: PLC0415
 
         assert callable(dunder_main.main)
 

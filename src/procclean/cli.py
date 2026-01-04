@@ -22,20 +22,7 @@ from .process_analyzer import (
 
 def cmd_list(args: argparse.Namespace) -> int:
     """List processes command."""
-    procs = get_process_list(min_memory_mb=args.min_memory)
-
-    # Apply cwd filter (--cwd with no value = current dir, --cwd PATH = given path)
-    if args.cwd is not None:
-        cwd_path = args.cwd or os.getcwd()
-        procs = filter_by_cwd(procs, cwd_path)
-
-    # Apply filters (--filter or shorthand flags)
-    if args.filter == "killable" or args.killable:
-        procs = filter_killable(procs)
-    elif args.filter == "orphans" or args.orphans:
-        procs = filter_orphans(procs)
-    elif args.filter == "high-memory" or args.high_memory:
-        procs = filter_high_memory(procs, threshold_mb=args.high_memory_threshold)
+    procs = get_filtered_processes(args)
 
     # Apply sorting
     reverse = not args.ascending
@@ -82,8 +69,8 @@ def cmd_groups(args: argparse.Namespace) -> int:
     return 0
 
 
-def _get_pids_from_filters(args: argparse.Namespace) -> list[int] | None:
-    """Get PIDs by applying filters from args. Returns None if no matches."""
+def get_filtered_processes(args: argparse.Namespace) -> list:
+    """Get processes with all filters from args applied."""
     procs = get_process_list(min_memory_mb=getattr(args, "min_memory", 5.0))
 
     # Apply cwd filter
@@ -93,40 +80,76 @@ def _get_pids_from_filters(args: argparse.Namespace) -> list[int] | None:
 
     # Apply preset filters
     filt = getattr(args, "filter", None)
+    threshold = getattr(args, "high_memory_threshold", 500.0)
     if filt == "killable" or getattr(args, "killable", False):
         procs = filter_killable(procs)
     elif filt == "orphans" or getattr(args, "orphans", False):
         procs = filter_orphans(procs)
     elif filt == "high-memory" or getattr(args, "high_memory", False):
-        procs = filter_high_memory(procs)
+        procs = filter_high_memory(procs, threshold_mb=threshold)
 
-    return [p.pid for p in procs] if procs else None
+    return procs
+
+
+def _get_kill_targets(args: argparse.Namespace) -> list:
+    """Get target processes for kill command from PIDs or filters."""
+    if args.pids:
+        all_procs = get_process_list(min_memory_mb=0)
+        pid_set = set(args.pids)
+        procs = [p for p in all_procs if p.pid in pid_set]
+        found_pids = {p.pid for p in procs}
+        for pid in args.pids:
+            if pid not in found_pids:
+                print(f"Warning: PID {pid} not found")
+        return procs
+    return get_filtered_processes(args)
+
+
+def _do_preview(args: argparse.Namespace, procs: list) -> int:
+    """Show preview of what would be killed."""
+    if hasattr(args, "sort") and args.sort:
+        procs = sort_processes(procs, sort_by=args.sort, reverse=True)
+    if hasattr(args, "limit") and args.limit:
+        procs = procs[: args.limit]
+    columns = args.columns.split(",") if getattr(args, "columns", None) else None
+    fmt = getattr(args, "out_format", "table")
+    print(format_output(procs, fmt, columns=columns))
+    print(f"\n{len(procs)} process(es) would be killed.")
+    return 0
+
+
+def _confirm_kill(args: argparse.Namespace, procs: list) -> bool:
+    """Prompt for kill confirmation. Returns True if confirmed."""
+    if args.yes or not sys.stdin.isatty():
+        return True
+    action = "FORCE KILL" if args.force else "terminate"
+    print(f"About to {action} {len(procs)} process(es):")
+    for p in procs[:5]:
+        print(f"  {p.pid}: {p.name} ({p.rss_mb:.1f} MB)")
+    if len(procs) > 5:
+        print(f"  ... and {len(procs) - 5} more")
+    try:
+        response = input("Continue? [y/N] ")
+        return response.lower() in ("y", "yes")
+    except EOFError:
+        return True  # Non-interactive
 
 
 def cmd_kill(args: argparse.Namespace) -> int:
     """Kill processes command."""
-    # Get PIDs from args or from filters
-    if args.pids:
-        pids = args.pids
-    else:
-        pids = _get_pids_from_filters(args)
-        if not pids:
-            print("No processes match the filters.")
-            return 0
+    procs = _get_kill_targets(args)
+    if not procs:
+        print("No processes match the filters.")
+        return 0
 
-    # Confirmation unless --yes or non-interactive
-    if not args.yes and sys.stdin.isatty():
-        action = "FORCE KILL" if args.force else "terminate"
-        print(f"About to {action} {len(pids)} process(es): {pids}")
-        try:
-            response = input("Continue? [y/N] ")
-            if response.lower() not in ("y", "yes"):
-                print("Aborted.")
-                return 1
-        except EOFError:
-            pass  # Non-interactive
+    if getattr(args, "preview", False):
+        return _do_preview(args, procs)
 
-    results = kill_processes(pids, force=args.force)
+    if not _confirm_kill(args, procs):
+        print("Aborted.")
+        return 1
+
+    results = kill_processes([p.pid for p in procs], force=args.force)
     exit_code = 0
     for pid, success, msg in results:
         status = "OK" if success else "FAILED"
@@ -329,6 +352,50 @@ def create_parser() -> argparse.ArgumentParser:
         default=5.0,
         metavar="MB",
         help="Minimum memory for filter (default: 5 MB)",
+    )
+    kill_parser.add_argument(
+        "--high-memory-threshold",
+        type=float,
+        default=500.0,
+        metavar="MB",
+        help="Threshold for high memory filter (default: 500 MB)",
+    )
+    kill_parser.add_argument(
+        "--preview",
+        "--dry-run",
+        "--dry",
+        action="store_true",
+        dest="preview",
+        help="Show what would be killed without killing",
+    )
+    kill_parser.add_argument(
+        "-O",
+        "--out-format",
+        choices=["table", "json", "csv", "md"],
+        default="table",
+        dest="out_format",
+        help="Output format for preview (default: table)",
+    )
+    kill_parser.add_argument(
+        "-s",
+        "--sort",
+        choices=["memory", "mem", "cpu", "pid", "name", "cwd"],
+        default=None,
+        help="Sort by field for preview",
+    )
+    kill_parser.add_argument(
+        "-n",
+        "--limit",
+        type=int,
+        metavar="N",
+        help="Limit preview output to N processes",
+    )
+    kill_parser.add_argument(
+        "-c",
+        "--columns",
+        type=str,
+        metavar="COLS",
+        help=f"Comma-separated columns for preview ({','.join(get_available_columns())})",
     )
     kill_parser.set_defaults(func=cmd_kill)
 

@@ -9,7 +9,7 @@ from procclean.process_analyzer import ProcessInfo
 def make_process():
     """Factory fixture to create ProcessInfo objects with defaults."""
 
-    def _make(  # noqa: PLR0913, PLR0917
+    def _make(
         pid: int = 1234,
         name: str = "test",
         cmdline: str = "test cmd",

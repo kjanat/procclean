@@ -81,7 +81,7 @@ class TestGetCwd:
 class TestGetProcessList:
     """Tests for get_process_list function."""
 
-    def _mock_proc_info(  # noqa: PLR0913, PLR0917
+    def _mock_proc_info(
         self,
         pid=1234,
         name="python",

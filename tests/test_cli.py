@@ -4,11 +4,15 @@ import json
 from unittest.mock import patch
 
 from procclean.cli import (
+    _confirm_kill,
+    _do_preview,
+    _get_kill_targets,
     cmd_groups,
     cmd_kill,
     cmd_list,
     cmd_memory,
     create_parser,
+    get_filtered_processes,
     run_cli,
 )
 
@@ -133,6 +137,50 @@ class TestCreateParser:
         args = parser.parse_args(["kill", "-k", "-y"])
         assert args.killable is True
         assert args.pids == []
+
+    def test_kill_preview_flag(self):
+        """Should parse --preview flag."""
+        parser = create_parser()
+        args = parser.parse_args(["kill", "-k", "--preview"])
+        assert args.preview is True
+
+    def test_kill_dry_run_alias(self):
+        """Should parse --dry-run as alias for --preview."""
+        parser = create_parser()
+        args = parser.parse_args(["kill", "-k", "--dry-run"])
+        assert args.preview is True
+
+    def test_kill_dry_alias(self):
+        """Should parse --dry as alias for --preview."""
+        parser = create_parser()
+        args = parser.parse_args(["kill", "-k", "--dry"])
+        assert args.preview is True
+
+    def test_kill_preview_with_format(self):
+        """Should parse preview with output format."""
+        parser = create_parser()
+        args = parser.parse_args(["kill", "-k", "--preview", "-O", "json"])
+        assert args.preview is True
+        assert args.out_format == "json"
+
+    def test_kill_preview_with_sort_limit(self):
+        """Should parse preview with sort and limit."""
+        parser = create_parser()
+        args = parser.parse_args(["kill", "-k", "--preview", "-s", "cpu", "-n", "5"])
+        assert args.sort == "cpu"
+        assert args.limit == 5
+
+    def test_kill_preview_with_columns(self):
+        """Should parse preview with custom columns."""
+        parser = create_parser()
+        args = parser.parse_args(["kill", "-k", "--preview", "-c", "pid,name,rss"])
+        assert args.columns == "pid,name,rss"
+
+    def test_kill_high_memory_threshold(self):
+        """Should parse --high-memory-threshold for kill."""
+        parser = create_parser()
+        args = parser.parse_args(["kill", "-m", "--high-memory-threshold", "200", "-y"])
+        assert args.high_memory_threshold == 200.0
 
     def test_memory_command(self):
         """Should parse memory command."""
@@ -363,41 +411,49 @@ class TestCmdGroups:
 class TestCmdKill:
     """Tests for cmd_kill function."""
 
+    @patch("procclean.cli.get_process_list")
     @patch("procclean.cli.kill_processes")
-    def test_with_yes_flag(self, mock_kill, capsys):
+    def test_with_yes_flag(self, mock_kill, mock_get, sample_processes, capsys):
         """Should skip confirmation when -y flag set."""
-        mock_kill.return_value = [(123, True, "Process 123 terminated")]
+        mock_get.return_value = sample_processes
+        mock_kill.return_value = [(1, True, "Process 1 terminated")]
 
         parser = create_parser()
-        args = parser.parse_args(["kill", "123", "-y"])
+        args = parser.parse_args(["kill", "1", "-y"])
         result = cmd_kill(args)
 
         assert result == 0
-        mock_kill.assert_called_once_with([123], force=False)
+        mock_kill.assert_called_once_with([1], force=False)
         captured = capsys.readouterr()
         assert "[OK]" in captured.out
 
+    @patch("procclean.cli.get_process_list")
     @patch("procclean.cli.kill_processes")
-    def test_with_force_flag(self, mock_kill, capsys):
+    def test_with_force_flag(self, mock_kill, mock_get, sample_processes, capsys):
         """Should pass force=True when -f flag set."""
-        mock_kill.return_value = [(123, True, "Process 123 killed")]
+        mock_get.return_value = sample_processes
+        mock_kill.return_value = [(1, True, "Process 1 killed")]
 
         parser = create_parser()
-        args = parser.parse_args(["kill", "123", "-f", "-y"])
+        args = parser.parse_args(["kill", "1", "-f", "-y"])
         cmd_kill(args)
 
-        mock_kill.assert_called_once_with([123], force=True)
+        mock_kill.assert_called_once_with([1], force=True)
 
+    @patch("procclean.cli.get_process_list")
     @patch("procclean.cli.kill_processes")
-    def test_returns_exit_code_on_failure(self, mock_kill, capsys):
+    def test_returns_exit_code_on_failure(
+        self, mock_kill, mock_get, sample_processes, capsys
+    ):
         """Should return non-zero exit code on any failure."""
+        mock_get.return_value = sample_processes
         mock_kill.return_value = [
-            (123, True, "OK"),
-            (456, False, "Access denied"),
+            (1, True, "OK"),
+            (2, False, "Access denied"),
         ]
 
         parser = create_parser()
-        args = parser.parse_args(["kill", "123", "456", "-y"])
+        args = parser.parse_args(["kill", "1", "2", "-y"])
         result = cmd_kill(args)
 
         assert result == 1
@@ -405,15 +461,19 @@ class TestCmdKill:
         assert "[OK]" in captured.out
         assert "[FAILED]" in captured.out
 
+    @patch("procclean.cli.get_process_list")
     @patch("procclean.cli.kill_processes")
     @patch("sys.stdin")
     @patch("builtins.input", return_value="n")
-    def test_confirmation_abort(self, mock_input, mock_stdin, mock_kill, capsys):
+    def test_confirmation_abort(
+        self, mock_input, mock_stdin, mock_kill, mock_get, sample_processes, capsys
+    ):
         """Should abort when user says no."""
         mock_stdin.isatty.return_value = True
+        mock_get.return_value = sample_processes
 
         parser = create_parser()
-        args = parser.parse_args(["kill", "123"])
+        args = parser.parse_args(["kill", "1"])
         result = cmd_kill(args)
 
         assert result == 1
@@ -421,31 +481,39 @@ class TestCmdKill:
         captured = capsys.readouterr()
         assert "Aborted" in captured.out
 
+    @patch("procclean.cli.get_process_list")
     @patch("procclean.cli.kill_processes")
     @patch("sys.stdin")
     @patch("builtins.input", return_value="y")
-    def test_confirmation_yes(self, mock_input, mock_stdin, mock_kill, capsys):
+    def test_confirmation_yes(
+        self, mock_input, mock_stdin, mock_kill, mock_get, sample_processes, capsys
+    ):
         """Should proceed when user says yes."""
         mock_stdin.isatty.return_value = True
-        mock_kill.return_value = [(123, True, "Process 123 terminated")]
+        mock_get.return_value = sample_processes
+        mock_kill.return_value = [(1, True, "Process 1 terminated")]
 
         parser = create_parser()
-        args = parser.parse_args(["kill", "123"])
+        args = parser.parse_args(["kill", "1"])
         result = cmd_kill(args)
 
         assert result == 0
         mock_kill.assert_called_once()
 
+    @patch("procclean.cli.get_process_list")
     @patch("procclean.cli.kill_processes")
     @patch("sys.stdin")
     @patch("builtins.input", side_effect=EOFError)
-    def test_confirmation_eof(self, mock_input, mock_stdin, mock_kill, capsys):
+    def test_confirmation_eof(
+        self, mock_input, mock_stdin, mock_kill, mock_get, sample_processes, capsys
+    ):
         """Should proceed on EOFError (non-interactive pipe)."""
         mock_stdin.isatty.return_value = True
-        mock_kill.return_value = [(123, True, "Process 123 terminated")]
+        mock_get.return_value = sample_processes
+        mock_kill.return_value = [(1, True, "Process 1 terminated")]
 
         parser = create_parser()
-        args = parser.parse_args(["kill", "123"])
+        args = parser.parse_args(["kill", "1"])
         result = cmd_kill(args)
 
         assert result == 0
@@ -554,6 +622,271 @@ class TestCmdMemory:
         assert "Used:" in captured.out
         assert "Free:" in captured.out
         assert "Swap:" in captured.out
+
+
+class TestGetFilteredProcesses:
+    """Tests for get_filtered_processes function."""
+
+    @patch("procclean.cli.get_process_list")
+    def test_returns_all_when_no_filters(self, mock_get, sample_processes):
+        """Should return all processes when no filters applied."""
+        mock_get.return_value = sample_processes
+
+        parser = create_parser()
+        args = parser.parse_args(["list"])
+        result = get_filtered_processes(args)
+
+        assert result == sample_processes
+
+    @patch("procclean.cli.get_process_list")
+    @patch("procclean.cli.filter_killable")
+    def test_applies_killable_filter(self, mock_filter, mock_get, sample_processes):
+        """Should apply killable filter."""
+        mock_get.return_value = sample_processes
+        mock_filter.return_value = sample_processes[:1]
+
+        parser = create_parser()
+        args = parser.parse_args(["list", "-k"])
+        result = get_filtered_processes(args)
+
+        mock_filter.assert_called_once()
+        assert result == sample_processes[:1]
+
+    @patch("procclean.cli.get_process_list")
+    @patch("procclean.cli.filter_by_cwd")
+    def test_applies_cwd_filter(self, mock_filter, mock_get, sample_processes):
+        """Should apply cwd filter."""
+        mock_get.return_value = sample_processes
+        mock_filter.return_value = sample_processes[:1]
+
+        parser = create_parser()
+        args = parser.parse_args(["list", "--cwd", "/home"])
+        result = get_filtered_processes(args)
+
+        mock_filter.assert_called_once_with(sample_processes, "/home")
+        assert result == sample_processes[:1]
+
+
+class TestGetKillTargets:
+    """Tests for _get_kill_targets function."""
+
+    @patch("procclean.cli.get_process_list")
+    def test_with_explicit_pids(self, mock_get, sample_processes, capsys):
+        """Should filter by explicit PIDs."""
+        mock_get.return_value = sample_processes
+
+        parser = create_parser()
+        args = parser.parse_args(["kill", "1", "2", "-y"])
+        result = _get_kill_targets(args)
+
+        assert len(result) == 2
+        assert {p.pid for p in result} == {1, 2}
+
+    @patch("procclean.cli.get_process_list")
+    def test_warns_missing_pids(self, mock_get, sample_processes, capsys):
+        """Should warn about PIDs not found."""
+        mock_get.return_value = sample_processes
+
+        parser = create_parser()
+        args = parser.parse_args(["kill", "1", "9999", "-y"])
+        _get_kill_targets(args)
+
+        captured = capsys.readouterr()
+        assert "Warning: PID 9999 not found" in captured.out
+
+    @patch("procclean.cli.get_filtered_processes")
+    def test_uses_filters_when_no_pids(self, mock_filter, sample_processes):
+        """Should use filters when no explicit PIDs."""
+        mock_filter.return_value = sample_processes
+
+        parser = create_parser()
+        args = parser.parse_args(["kill", "-k", "-y"])
+        result = _get_kill_targets(args)
+
+        mock_filter.assert_called_once()
+        assert result == sample_processes
+
+
+class TestDoPreview:
+    """Tests for _do_preview function."""
+
+    @patch("procclean.cli.format_output")
+    def test_outputs_formatted_list(self, mock_format, sample_processes, capsys):
+        """Should output formatted process list."""
+        mock_format.return_value = "formatted output"
+
+        parser = create_parser()
+        args = parser.parse_args(["kill", "-k", "--preview"])
+        result = _do_preview(args, sample_processes)
+
+        assert result == 0
+        mock_format.assert_called_once()
+        captured = capsys.readouterr()
+        assert "formatted output" in captured.out
+        assert "would be killed" in captured.out
+
+    @patch("procclean.cli.sort_processes")
+    @patch("procclean.cli.format_output")
+    def test_applies_sort(self, mock_format, mock_sort, sample_processes):
+        """Should apply sorting when specified."""
+        mock_sort.return_value = sample_processes
+        mock_format.return_value = ""
+
+        parser = create_parser()
+        args = parser.parse_args(["kill", "-k", "--preview", "-s", "cpu"])
+        _do_preview(args, sample_processes)
+
+        mock_sort.assert_called_once_with(sample_processes, sort_by="cpu", reverse=True)
+
+    @patch("procclean.cli.format_output")
+    def test_applies_limit(self, mock_format, sample_processes):
+        """Should apply limit when specified."""
+        mock_format.return_value = ""
+
+        parser = create_parser()
+        args = parser.parse_args(["kill", "-k", "--preview", "-n", "2"])
+        _do_preview(args, sample_processes)
+
+        # format_output should receive limited list
+        call_args = mock_format.call_args[0]
+        assert len(call_args[0]) == 2
+
+    @patch("procclean.cli.format_output")
+    def test_uses_specified_format(self, mock_format, sample_processes):
+        """Should use specified output format."""
+        mock_format.return_value = ""
+
+        parser = create_parser()
+        args = parser.parse_args(["kill", "-k", "--preview", "-O", "json"])
+        _do_preview(args, sample_processes)
+
+        mock_format.assert_called_once()
+        call_args = mock_format.call_args
+        assert call_args[0][1] == "json"
+
+
+class TestConfirmKill:
+    """Tests for _confirm_kill function."""
+
+    def test_returns_true_with_yes_flag(self, sample_processes):
+        """Should return True when -y flag set."""
+        parser = create_parser()
+        args = parser.parse_args(["kill", "123", "-y"])
+        result = _confirm_kill(args, sample_processes)
+        assert result is True
+
+    @patch("sys.stdin")
+    def test_returns_true_non_interactive(self, mock_stdin, sample_processes):
+        """Should return True when not interactive."""
+        mock_stdin.isatty.return_value = False
+
+        parser = create_parser()
+        args = parser.parse_args(["kill", "123"])
+        result = _confirm_kill(args, sample_processes)
+
+        assert result is True
+
+    @patch("sys.stdin")
+    @patch("builtins.input", return_value="y")
+    def test_returns_true_on_yes(self, mock_input, mock_stdin, sample_processes):
+        """Should return True when user confirms."""
+        mock_stdin.isatty.return_value = True
+
+        parser = create_parser()
+        args = parser.parse_args(["kill", "123"])
+        result = _confirm_kill(args, sample_processes)
+
+        assert result is True
+
+    @patch("sys.stdin")
+    @patch("builtins.input", return_value="n")
+    def test_returns_false_on_no(self, mock_input, mock_stdin, sample_processes):
+        """Should return False when user declines."""
+        mock_stdin.isatty.return_value = True
+
+        parser = create_parser()
+        args = parser.parse_args(["kill", "123"])
+        result = _confirm_kill(args, sample_processes)
+
+        assert result is False
+
+    @patch("sys.stdin")
+    @patch("builtins.input", return_value="y")
+    def test_shows_process_details(
+        self, mock_input, mock_stdin, sample_processes, capsys
+    ):
+        """Should show process details in confirmation."""
+        mock_stdin.isatty.return_value = True
+
+        parser = create_parser()
+        args = parser.parse_args(["kill", "123"])
+        _confirm_kill(args, sample_processes)
+
+        captured = capsys.readouterr()
+        # Should show process name and memory
+        assert "python" in captured.out or sample_processes[0].name in captured.out
+        assert "MB" in captured.out
+
+    @patch("sys.stdin")
+    @patch("builtins.input", return_value="y")
+    def test_shows_more_indicator(
+        self, mock_input, mock_stdin, sample_processes, capsys
+    ):
+        """Should show '... and N more' for many processes."""
+        mock_stdin.isatty.return_value = True
+        # Need more than 5 processes
+        many_procs = sample_processes * 3  # 9 processes
+
+        parser = create_parser()
+        args = parser.parse_args(["kill", "123"])
+        _confirm_kill(args, many_procs)
+
+        captured = capsys.readouterr()
+        assert "... and" in captured.out
+        assert "more" in captured.out
+
+
+class TestCmdKillPreview:
+    """Tests for cmd_kill preview mode."""
+
+    @patch("procclean.cli.get_process_list")
+    @patch("procclean.cli.filter_killable")
+    @patch("procclean.cli.format_output")
+    def test_preview_does_not_kill(
+        self, mock_format, mock_filter, mock_get, sample_processes, capsys
+    ):
+        """Should not call kill_processes in preview mode."""
+        mock_get.return_value = sample_processes
+        mock_filter.return_value = sample_processes
+        mock_format.return_value = "preview output"
+
+        parser = create_parser()
+        args = parser.parse_args(["kill", "-k", "--preview"])
+        result = cmd_kill(args)
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "preview output" in captured.out
+        assert "would be killed" in captured.out
+
+    @patch("procclean.cli.get_process_list")
+    @patch("procclean.cli.filter_killable")
+    @patch("procclean.cli.format_output")
+    def test_preview_json_format(
+        self, mock_format, mock_filter, mock_get, sample_processes
+    ):
+        """Should support JSON output in preview."""
+        mock_get.return_value = sample_processes
+        mock_filter.return_value = sample_processes
+        mock_format.return_value = "{}"
+
+        parser = create_parser()
+        args = parser.parse_args(["kill", "-k", "--preview", "-O", "json"])
+        cmd_kill(args)
+
+        mock_format.assert_called()
+        call_args = mock_format.call_args
+        assert call_args[0][1] == "json"
 
 
 class TestRunCli:
