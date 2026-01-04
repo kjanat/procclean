@@ -1,5 +1,6 @@
 """Process analysis utilities."""
 
+import fnmatch
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -268,6 +269,33 @@ def filter_high_memory(
     return [p for p in procs if p.rss_mb > threshold_mb]
 
 
+def filter_by_cwd(procs: list[ProcessInfo], cwd_path: str) -> list[ProcessInfo]:
+    """Filter processes by current working directory.
+
+    Args:
+        procs: List of processes to filter
+        cwd_path: Path to match. If contains '*', uses glob matching.
+                  Otherwise, uses prefix matching.
+
+    Returns:
+        Processes whose cwd starts with cwd_path (or matches glob pattern)
+
+    """
+    if "*" in cwd_path or "?" in cwd_path:
+        # Glob matching
+        return [p for p in procs if p.cwd and fnmatch.fnmatch(p.cwd, cwd_path)]
+    else:
+        # Prefix matching (normalized)
+        cwd_path = cwd_path.rstrip("/")
+        return [
+            p
+            for p in procs
+            if p.cwd
+            and p.cwd != "?"
+            and (p.cwd == cwd_path or p.cwd.startswith(cwd_path + "/"))
+        ]
+
+
 def sort_processes(
     procs: list[ProcessInfo],
     sort_by: str = "memory",
@@ -277,7 +305,7 @@ def sort_processes(
 
     Args:
         procs: List of processes to sort
-        sort_by: One of 'memory', 'cpu', 'pid', 'name'
+        sort_by: One of 'memory', 'cpu', 'pid', 'name', 'cwd'
         reverse: If True, sort descending (default for numeric)
 
     """
@@ -287,6 +315,7 @@ def sort_processes(
         "cpu": lambda p: p.cpu_percent,
         "pid": lambda p: p.pid,
         "name": lambda p: p.name.lower(),
+        "cwd": lambda p: p.cwd.lower() if p.cwd else "",
     }
     key_func = sort_keys.get(sort_by, sort_keys["memory"])
     return sorted(procs, key=key_func, reverse=reverse)

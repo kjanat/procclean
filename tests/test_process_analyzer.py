@@ -8,6 +8,7 @@ import pytest
 from procclean.process_analyzer import (
     CRITICAL_SERVICES,
     SYSTEM_EXE_PATHS,
+    filter_by_cwd,
     filter_high_memory,
     filter_killable,
     filter_orphans,
@@ -810,6 +811,138 @@ class TestFilterKillable:
         procs = [make_process(is_orphan=True, in_tmux=False)]
         result = filter_killable(procs)
         assert result == []
+
+
+class TestFilterByCwd:
+    """Tests for filter_by_cwd function."""
+
+    def test_prefix_match_exact(self, make_process):
+        """Should match exact cwd path."""
+        procs = [
+            make_process(pid=1, cwd="/home/user/project"),
+            make_process(pid=2, cwd="/home/user/other"),
+        ]
+        result = filter_by_cwd(procs, "/home/user/project")
+        assert len(result) == 1
+        assert result[0].pid == 1
+
+    def test_prefix_match_subdirectory(self, make_process):
+        """Should match subdirectories of given path."""
+        procs = [
+            make_process(pid=1, cwd="/home/user/project"),
+            make_process(pid=2, cwd="/home/user/project/sub"),
+            make_process(pid=3, cwd="/home/user/other"),
+        ]
+        result = filter_by_cwd(procs, "/home/user/project")
+        assert len(result) == 2
+        assert {p.pid for p in result} == {1, 2}
+
+    def test_prefix_match_trailing_slash(self, make_process):
+        """Should handle trailing slash in filter path."""
+        procs = [
+            make_process(pid=1, cwd="/home/user/project"),
+            make_process(pid=2, cwd="/home/user/project/sub"),
+        ]
+        result = filter_by_cwd(procs, "/home/user/project/")
+        assert len(result) == 2
+
+    def test_no_partial_directory_match(self, make_process):
+        """Should not match partial directory names."""
+        procs = [
+            make_process(pid=1, cwd="/home/user/project"),
+            make_process(pid=2, cwd="/home/user/project-old"),
+        ]
+        result = filter_by_cwd(procs, "/home/user/project")
+        assert len(result) == 1
+        assert result[0].pid == 1
+
+    def test_glob_pattern_asterisk(self, make_process):
+        """Should use glob matching when pattern contains *."""
+        procs = [
+            make_process(pid=1, cwd="/home/user/project"),
+            make_process(pid=2, cwd="/tmp/build"),
+            make_process(pid=3, cwd="/home/admin/project"),
+        ]
+        result = filter_by_cwd(procs, "/home/*/project")
+        assert len(result) == 2
+        assert {p.pid for p in result} == {1, 3}
+
+    def test_glob_pattern_question_mark(self, make_process):
+        """Should use glob matching when pattern contains ?."""
+        procs = [
+            make_process(pid=1, cwd="/tmp/a"),
+            make_process(pid=2, cwd="/tmp/b"),
+            make_process(pid=3, cwd="/tmp/ab"),
+        ]
+        result = filter_by_cwd(procs, "/tmp/?")
+        assert len(result) == 2
+        assert {p.pid for p in result} == {1, 2}
+
+    def test_excludes_unknown_cwd(self, make_process):
+        """Should exclude processes with unknown cwd (?)."""
+        procs = [
+            make_process(pid=1, cwd="/home/user/project"),
+            make_process(pid=2, cwd="?"),
+        ]
+        result = filter_by_cwd(procs, "/home/user")
+        assert len(result) == 1
+        assert result[0].pid == 1
+
+    def test_excludes_none_cwd(self, make_process):
+        """Should exclude processes with None cwd."""
+        procs = [
+            make_process(pid=1, cwd="/home/user/project"),
+            make_process(pid=2, cwd=None),
+        ]
+        result = filter_by_cwd(procs, "/home/user")
+        assert len(result) == 1
+        assert result[0].pid == 1
+
+    def test_empty_result(self, make_process):
+        """Should return empty list when no matches."""
+        procs = [make_process(pid=1, cwd="/tmp")]
+        result = filter_by_cwd(procs, "/home/user")
+        assert result == []
+
+    def test_empty_input(self):
+        """Should return empty list for empty input."""
+        assert filter_by_cwd([], "/home/user") == []
+
+
+class TestSortByCwd:
+    """Tests for sorting by cwd."""
+
+    def test_sort_by_cwd_ascending(self, make_process):
+        """Should sort by cwd alphabetically ascending."""
+        procs = [
+            make_process(pid=1, cwd="/tmp/z"),
+            make_process(pid=2, cwd="/home/a"),
+            make_process(pid=3, cwd="/var/m"),
+        ]
+        result = sort_processes(procs, sort_by="cwd", reverse=False)
+        assert result[0].cwd == "/home/a"
+        assert result[1].cwd == "/tmp/z"
+        assert result[2].cwd == "/var/m"
+
+    def test_sort_by_cwd_descending(self, make_process):
+        """Should sort by cwd descending."""
+        procs = [
+            make_process(pid=1, cwd="/home/a"),
+            make_process(pid=2, cwd="/var/z"),
+        ]
+        result = sort_processes(procs, sort_by="cwd", reverse=True)
+        assert result[0].cwd == "/var/z"
+        assert result[1].cwd == "/home/a"
+
+    def test_sort_by_cwd_handles_none(self, make_process):
+        """Should handle None cwd when sorting."""
+        procs = [
+            make_process(pid=1, cwd="/home/user"),
+            make_process(pid=2, cwd=None),
+        ]
+        # Should not raise
+        result = sort_processes(procs, sort_by="cwd", reverse=False)
+        assert len(result) == 2
 
 
 class TestConstants:

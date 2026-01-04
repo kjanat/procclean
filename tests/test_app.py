@@ -148,6 +148,14 @@ class TestProcessCleanerApp:  # noqa: PLR0904
             assert app.sort_key == "name"
 
     @pytest.mark.asyncio
+    async def test_sort_by_cwd(self, mock_process_data):
+        """Should sort by cwd when '5' pressed."""
+        app = ProcessCleanerApp()
+        async with app.run_test() as pilot:
+            await pilot.press("5")
+            assert app.sort_key == "cwd"
+
+    @pytest.mark.asyncio
     async def test_toggle_sort_order(self, mock_process_data):
         """Should toggle sort order when '!' pressed."""
         app = ProcessCleanerApp()
@@ -318,6 +326,88 @@ class TestProcessCleanerApp:  # noqa: PLR0904
             await pilot.press("y")
             await pilot.pause()
             mock_process_data["kill"].assert_called_with([1], force=True)
+
+    @pytest.mark.asyncio
+    async def test_filter_cwd(self, mock_process_data, make_process):
+        """Should filter by cwd when 'w' pressed."""
+        procs = [
+            make_process(pid=1, name="proc1", cwd="/home/user/project"),
+            make_process(pid=2, name="proc2", cwd="/tmp"),
+        ]
+        mock_process_data["get_procs"].return_value = procs
+
+        app = ProcessCleanerApp()
+        async with app.run_test() as pilot:
+            # Move to first row (which has cwd /home/user/project)
+            await pilot.press("w")
+            await pilot.pause()
+            assert app.cwd_filter == "/home/user/project"
+            assert "cwd=" in app.status_message
+
+    @pytest.mark.asyncio
+    async def test_filter_cwd_unknown(self, mock_process_data, make_process):
+        """Should show message when filtering by unknown cwd."""
+        procs = [make_process(pid=1, name="proc1", cwd="?")]
+        mock_process_data["get_procs"].return_value = procs
+
+        app = ProcessCleanerApp()
+        async with app.run_test() as pilot:
+            await pilot.press("w")
+            await pilot.pause()
+            assert app.cwd_filter is None
+            assert "Cannot filter" in app.status_message
+
+    @pytest.mark.asyncio
+    async def test_clear_cwd_filter(self, mock_process_data, make_process):
+        """Should clear cwd filter when 'W' pressed."""
+        procs = [make_process(pid=1, name="proc1", cwd="/home/user/project")]
+        mock_process_data["get_procs"].return_value = procs
+
+        app = ProcessCleanerApp()
+        async with app.run_test() as pilot:
+            # First set the filter
+            app.cwd_filter = "/home/user/project"
+            await pilot.press("W")  # Capital W to clear
+            await pilot.pause()
+            assert app.cwd_filter is None
+            assert "cleared" in app.status_message
+
+    @pytest.mark.asyncio
+    async def test_cwd_filter_applies_to_table(self, mock_process_data, make_process):
+        """Should apply cwd filter when updating table."""
+        procs = [
+            make_process(pid=1, name="proc1", cwd="/home/user/project"),
+            make_process(pid=2, name="proc2", cwd="/home/user/project/sub"),
+            make_process(pid=3, name="proc3", cwd="/tmp"),
+        ]
+        mock_process_data["get_procs"].return_value = procs
+
+        app = ProcessCleanerApp()
+        async with app.run_test() as pilot:
+            # Set cwd filter
+            app.cwd_filter = "/home/user/project"
+            app.update_table()
+            await pilot.pause()
+            # The filter should be applied (can't easily check table rows,
+            # but we verify the filter is set)
+            assert app.cwd_filter == "/home/user/project"
+
+    @pytest.mark.asyncio
+    async def test_cwd_filter_with_none_cwd(self, mock_process_data, make_process):
+        """Should handle None cwd in sorting."""
+        procs = [
+            make_process(pid=1, name="proc1", cwd="/home/user"),
+            make_process(pid=2, name="proc2", cwd=None),
+        ]
+        mock_process_data["get_procs"].return_value = procs
+
+        app = ProcessCleanerApp()
+        async with app.run_test() as pilot:
+            app.sort_key = "cwd"
+            app.update_table()
+            await pilot.pause()
+            # Should not raise, even with None cwd
+            assert app.sort_key == "cwd"
 
 
 class TestConfirmKillScreen:

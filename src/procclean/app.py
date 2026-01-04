@@ -18,6 +18,7 @@ from textual.widgets.option_list import Option
 
 from .process_analyzer import (
     ProcessInfo,
+    filter_by_cwd,
     find_similar_processes,
     get_memory_summary,
     get_process_list,
@@ -85,6 +86,8 @@ class ProcessCleanerApp(App):  # noqa: PLR0904
         Binding("o", "show_orphans", "Orphans"),
         Binding("a", "show_all", "All"),
         Binding("g", "show_groups", "Groups"),
+        Binding("w", "filter_cwd", "Filter CWD"),
+        Binding("W", "clear_cwd_filter", "Clear CWD"),
         Binding("space", "toggle_select", "Select"),
         Binding("s", "select_all_visible", "Select All"),
         Binding("c", "clear_selection", "Clear"),
@@ -93,6 +96,7 @@ class ProcessCleanerApp(App):  # noqa: PLR0904
         Binding("2", "sort_cpu", "Sort:CPU"),
         Binding("3", "sort_pid", "Sort:PID"),
         Binding("4", "sort_name", "Sort:Name"),
+        Binding("5", "sort_cwd", "Sort:CWD"),
         Binding("!", "toggle_sort_order", "Reverse"),
     ]
 
@@ -102,8 +106,9 @@ class ProcessCleanerApp(App):  # noqa: PLR0904
         self.selected_pids: set[int] = set()
         self.current_view = "all"
         self.status_message = ""
-        self.sort_key = "memory"  # memory, cpu, pid, name
+        self.sort_key = "memory"  # memory, cpu, pid, name, cwd
         self.sort_reverse = True  # descending by default
+        self.cwd_filter: str | None = None  # Filter by cwd path
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -161,6 +166,7 @@ class ProcessCleanerApp(App):  # noqa: PLR0904
             "cpu": lambda p: p.cpu_percent,
             "pid": lambda p: p.pid,
             "name": lambda p: p.name.lower(),
+            "cwd": lambda p: (p.cwd or "").lower(),
         }
         key_func = sort_keys.get(self.sort_key, sort_keys["memory"])
         return sorted(procs, key=key_func, reverse=self.sort_reverse)
@@ -182,6 +188,10 @@ class ProcessCleanerApp(App):  # noqa: PLR0904
         else:
             procs = self.processes
 
+        # Apply cwd filter
+        if self.cwd_filter:
+            procs = filter_by_cwd(procs, self.cwd_filter)
+
         # Apply sorting
         procs = self._sort_processes(procs)
 
@@ -191,7 +201,7 @@ class ProcessCleanerApp(App):  # noqa: PLR0904
             tmux_marker = " [tmux]" if proc.in_tmux else ""
             status = f"{proc.status}{orphan_marker}{tmux_marker}"
 
-            cwd = proc.cwd
+            cwd = proc.cwd or "?"
             if len(cwd) > 35:
                 cwd = "..." + cwd[-32:]
 
@@ -297,10 +307,34 @@ class ProcessCleanerApp(App):  # noqa: PLR0904
     def action_sort_name(self) -> None:
         self._set_sort("name")
 
+    def action_sort_cwd(self) -> None:
+        self._set_sort("cwd")
+
     def action_toggle_sort_order(self) -> None:
         self.sort_reverse = not self.sort_reverse
         order = "desc" if self.sort_reverse else "asc"
         self.status_message = f"Sort: {self.sort_key} ({order})"
+        self.update_table()
+
+    def action_filter_cwd(self) -> None:
+        """Filter by cwd of currently selected row."""
+        table = self.query_one("#process-table", DataTable)
+        if table.cursor_row is not None:
+            row = table.get_row_at(table.cursor_row)
+            pid = int(row[1])
+            proc = next((p for p in self.processes if p.pid == pid), None)
+            if proc and proc.cwd and proc.cwd != "?":
+                self.cwd_filter = proc.cwd
+                self.status_message = f"Filter: cwd={self.cwd_filter}"
+                self.update_table()
+            else:
+                self.status_message = "Cannot filter: unknown cwd"
+                self.update_status()
+
+    def action_clear_cwd_filter(self) -> None:
+        """Clear the cwd filter."""
+        self.cwd_filter = None
+        self.status_message = "CWD filter cleared"
         self.update_table()
 
     def _do_kill(self, force: bool = False) -> None:

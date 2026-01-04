@@ -2,11 +2,13 @@
 
 import argparse
 import json
+import os
 import sys
 from importlib.metadata import version
 
 from .formatters import format_output, get_available_columns
 from .process_analyzer import (
+    filter_by_cwd,
     filter_high_memory,
     filter_killable,
     filter_orphans,
@@ -21,6 +23,11 @@ from .process_analyzer import (
 def cmd_list(args: argparse.Namespace) -> int:
     """List processes command."""
     procs = get_process_list(min_memory_mb=args.min_memory)
+
+    # Apply cwd filter (--cwd with no value = current dir, --cwd PATH = given path)
+    if args.cwd is not None:
+        cwd_path = args.cwd or os.getcwd()
+        procs = filter_by_cwd(procs, cwd_path)
 
     # Apply filters (--filter or shorthand flags)
     if args.filter == "killable" or args.killable:
@@ -75,23 +82,49 @@ def cmd_groups(args: argparse.Namespace) -> int:
     return 0
 
 
+def _get_pids_from_filters(args: argparse.Namespace) -> list[int] | None:
+    """Get PIDs by applying filters from args. Returns None if no matches."""
+    procs = get_process_list(min_memory_mb=getattr(args, "min_memory", 5.0))
+
+    # Apply cwd filter
+    if getattr(args, "cwd", None) is not None:
+        cwd_path = args.cwd or os.getcwd()
+        procs = filter_by_cwd(procs, cwd_path)
+
+    # Apply preset filters
+    filt = getattr(args, "filter", None)
+    if filt == "killable" or getattr(args, "killable", False):
+        procs = filter_killable(procs)
+    elif filt == "orphans" or getattr(args, "orphans", False):
+        procs = filter_orphans(procs)
+    elif filt == "high-memory" or getattr(args, "high_memory", False):
+        procs = filter_high_memory(procs)
+
+    return [p.pid for p in procs] if procs else None
+
+
 def cmd_kill(args: argparse.Namespace) -> int:
     """Kill processes command."""
-    pids = args.pids
+    # Get PIDs from args or from filters
+    if args.pids:
+        pids = args.pids
+    else:
+        pids = _get_pids_from_filters(args)
+        if not pids:
+            print("No processes match the filters.")
+            return 0
 
     # Confirmation unless --yes or non-interactive
     if not args.yes and sys.stdin.isatty():
-        print(
-            f"About to {'FORCE KILL' if args.force else 'terminate'} {len(pids)} process(es): {pids}"
-        )
+        action = "FORCE KILL" if args.force else "terminate"
+        print(f"About to {action} {len(pids)} process(es): {pids}")
         try:
             response = input("Continue? [y/N] ")
             if response.lower() not in ("y", "yes"):
                 print("Aborted.")
                 return 1
         except EOFError:
-            # Non-interactive
-            pass
+            pass  # Non-interactive
 
     results = kill_processes(pids, force=args.force)
     exit_code = 0
@@ -145,7 +178,7 @@ def create_parser() -> argparse.ArgumentParser:
     list_parser.add_argument(
         "-s",
         "--sort",
-        choices=["memory", "mem", "cpu", "pid", "name"],
+        choices=["memory", "mem", "cpu", "pid", "name", "cwd"],
         default="memory",
         help="Sort by field (default: memory)",
     )
@@ -207,6 +240,14 @@ def create_parser() -> argparse.ArgumentParser:
         metavar="COLS",
         help=f"Comma-separated columns ({','.join(get_available_columns())})",
     )
+    list_parser.add_argument(
+        "--cwd",
+        nargs="?",
+        const="",
+        default=None,
+        metavar="PATH",
+        help="Filter by cwd (no value = current dir, or specify path/glob)",
+    )
     list_parser.set_defaults(func=cmd_list)
 
     # Groups command
@@ -234,9 +275,9 @@ def create_parser() -> argparse.ArgumentParser:
     kill_parser.add_argument(
         "pids",
         type=int,
-        nargs="+",
+        nargs="*",
         metavar="PID",
-        help="Process ID(s) to kill",
+        help="Process ID(s) to kill (or use filters)",
     )
     kill_parser.add_argument(
         "-f",
@@ -249,6 +290,45 @@ def create_parser() -> argparse.ArgumentParser:
         "--yes",
         action="store_true",
         help="Skip confirmation prompt",
+    )
+    kill_parser.add_argument(
+        "--cwd",
+        nargs="?",
+        const="",
+        default=None,
+        metavar="PATH",
+        help="Kill processes in cwd (no value = current dir, or specify path/glob)",
+    )
+    kill_parser.add_argument(
+        "-F",
+        "--filter",
+        choices=["killable", "orphans", "high-memory"],
+        help="Filter preset to select processes",
+    )
+    kill_parser.add_argument(
+        "-k",
+        "--killable",
+        action="store_true",
+        help="Shorthand for --filter killable",
+    )
+    kill_parser.add_argument(
+        "-o",
+        "--orphans",
+        action="store_true",
+        help="Shorthand for --filter orphans",
+    )
+    kill_parser.add_argument(
+        "-m",
+        "--high-memory",
+        action="store_true",
+        help="Shorthand for --filter high-memory",
+    )
+    kill_parser.add_argument(
+        "--min-memory",
+        type=float,
+        default=5.0,
+        metavar="MB",
+        help="Minimum memory for filter (default: 5 MB)",
     )
     kill_parser.set_defaults(func=cmd_kill)
 

@@ -35,16 +35,21 @@
 ## CLI Usage
 
 ```bash
-procclean                         # Launch TUI (default)
-procclean list                    # List processes (table)
-procclean list -f json|csv|md     # Different output formats
-procclean list -s mem|cpu|pid|name  # Sort by field
-procclean list -o                 # Orphans only
-procclean list -m                 # High memory only
-procclean groups                  # Show process groups
-procclean kill <PID> [PID...]     # Kill process(es)
-procclean kill -f <PID>           # Force kill (SIGKILL)
-procclean mem                     # Show memory summary
+procclean                           # Launch TUI (default)
+procclean list                      # List processes (table)
+procclean list -f json|csv|md       # Different output formats
+procclean list -s mem|cpu|pid|name|cwd  # Sort by field
+procclean list -o                   # Orphans only
+procclean list -m                   # High memory only
+procclean list -k                   # Killable orphans only
+procclean list --cwd                # Filter by current directory
+procclean list --cwd /path/to/dir   # Filter by specific cwd
+procclean groups                    # Show process groups
+procclean kill <PID> [PID...]       # Kill process(es)
+procclean kill -f <PID>             # Force kill (SIGKILL)
+procclean kill --cwd /path -y       # Kill all in cwd (with confirm skip)
+procclean kill -k -y                # Kill all killable orphans
+procclean mem                       # Show memory summary
 ```
 
 ## TUI Keybindings
@@ -58,6 +63,8 @@ procclean mem                     # Show memory summary
 | `o`     | Show orphans            |
 | `a`     | Show all                |
 | `g`     | Show groups             |
+| `w`     | Filter by selected cwd  |
+| `W`     | Clear cwd filter        |
 | `space` | Toggle selection        |
 | `s`     | Select all visible      |
 | `c`     | Clear selection         |
@@ -65,4 +72,5 @@ procclean mem                     # Show memory summary
 | `2`     | Sort by CPU             |
 | `3`     | Sort by PID             |
 | `4`     | Sort by name            |
+| `5`     | Sort by cwd             |
 | `!`     | Reverse sort order      |

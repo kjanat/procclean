@@ -3,8 +3,6 @@
 import json
 from unittest.mock import patch
 
-import pytest
-
 from procclean.cli import (
     cmd_groups,
     cmd_kill,
@@ -68,6 +66,31 @@ class TestCreateParser:
         assert args.command in ("list", "ls")
         assert hasattr(args, "func")
 
+    def test_list_cwd_no_value(self):
+        """Should parse --cwd with no value (uses current dir)."""
+        parser = create_parser()
+        args = parser.parse_args(["list", "--cwd"])
+        assert args.cwd is not None
+        assert not args.cwd  # Empty string
+
+    def test_list_cwd_with_path(self):
+        """Should parse --cwd with a path value."""
+        parser = create_parser()
+        args = parser.parse_args(["list", "--cwd", "/home/user/project"])
+        assert args.cwd == "/home/user/project"
+
+    def test_list_cwd_not_set(self):
+        """Should have None cwd when flag not used."""
+        parser = create_parser()
+        args = parser.parse_args(["list"])
+        assert args.cwd is None
+
+    def test_list_sort_by_cwd(self):
+        """Should allow sorting by cwd."""
+        parser = create_parser()
+        args = parser.parse_args(["list", "-s", "cwd"])
+        assert args.sort == "cwd"
+
     def test_groups_command(self):
         """Should parse groups command."""
         parser = create_parser()
@@ -82,11 +105,12 @@ class TestCreateParser:
         assert args.command in ("groups", "g")
         assert args.format == "json"
 
-    def test_kill_command_requires_pids(self):
-        """Should require at least one PID for kill."""
+    def test_kill_command_no_pids_allowed(self):
+        """Should allow kill without PIDs (uses filters instead)."""
         parser = create_parser()
-        with pytest.raises(SystemExit):
-            parser.parse_args(["kill"])
+        args = parser.parse_args(["kill", "--cwd", "/tmp"])
+        assert args.pids == []
+        assert args.cwd == "/tmp"
 
     def test_kill_command_with_pids(self):
         """Should parse kill command with PIDs."""
@@ -95,6 +119,20 @@ class TestCreateParser:
         assert args.pids == [123, 456]
         assert args.force is True
         assert args.yes is True
+
+    def test_kill_with_cwd_filter(self):
+        """Should parse kill with --cwd filter."""
+        parser = create_parser()
+        args = parser.parse_args(["kill", "--cwd", "/home/user", "-y"])
+        assert args.cwd == "/home/user"
+        assert args.pids == []
+
+    def test_kill_with_filter_flags(self):
+        """Should parse kill with filter flags."""
+        parser = create_parser()
+        args = parser.parse_args(["kill", "-k", "-y"])
+        assert args.killable is True
+        assert args.pids == []
 
     def test_memory_command(self):
         """Should parse memory command."""
@@ -224,6 +262,51 @@ class TestCmdList:
         # format_output should receive limited list
         call_args = mock_format.call_args[0]
         assert len(call_args[0]) == 2
+
+    @patch("procclean.cli.get_process_list")
+    @patch("procclean.cli.filter_by_cwd")
+    @patch("procclean.cli.sort_processes")
+    @patch("procclean.cli.format_output")
+    def test_filters_by_cwd_with_path(
+        self, mock_format, mock_sort, mock_filter, mock_get_procs, sample_processes
+    ):
+        """Should apply cwd filter with given path."""
+        mock_get_procs.return_value = sample_processes
+        mock_filter.return_value = sample_processes[:1]
+        mock_sort.return_value = sample_processes[:1]
+        mock_format.return_value = ""
+
+        parser = create_parser()
+        args = parser.parse_args(["list", "--cwd", "/home/user/project"])
+        cmd_list(args)
+
+        mock_filter.assert_called_once_with(sample_processes, "/home/user/project")
+
+    @patch("os.getcwd", return_value="/current/working/dir")
+    @patch("procclean.cli.get_process_list")
+    @patch("procclean.cli.filter_by_cwd")
+    @patch("procclean.cli.sort_processes")
+    @patch("procclean.cli.format_output")
+    def test_filters_by_cwd_empty_uses_getcwd(
+        self,
+        mock_format,
+        mock_sort,
+        mock_filter,
+        mock_get_procs,
+        _mock_getcwd,
+        sample_processes,
+    ):
+        """Should use current directory when --cwd has no value."""
+        mock_get_procs.return_value = sample_processes
+        mock_filter.return_value = sample_processes[:1]
+        mock_sort.return_value = sample_processes[:1]
+        mock_format.return_value = ""
+
+        parser = create_parser()
+        args = parser.parse_args(["list", "--cwd"])
+        cmd_list(args)
+
+        mock_filter.assert_called_once_with(sample_processes, "/current/working/dir")
 
 
 class TestCmdGroups:
@@ -367,6 +450,62 @@ class TestCmdKill:
 
         assert result == 0
         mock_kill.assert_called_once()
+
+    @patch("procclean.cli.get_process_list")
+    @patch("procclean.cli.filter_by_cwd")
+    @patch("procclean.cli.kill_processes")
+    def test_kill_with_cwd_filter(
+        self, mock_kill, mock_filter, mock_get_procs, sample_processes, capsys
+    ):
+        """Should kill processes matching cwd filter."""
+        mock_get_procs.return_value = sample_processes
+        mock_filter.return_value = sample_processes[:2]
+        mock_kill.return_value = [
+            (1, True, "terminated"),
+            (2, True, "terminated"),
+        ]
+
+        parser = create_parser()
+        args = parser.parse_args(["kill", "--cwd", "/home/user", "-y"])
+        result = cmd_kill(args)
+
+        assert result == 0
+        mock_filter.assert_called_once_with(sample_processes, "/home/user")
+        mock_kill.assert_called_once_with([1, 2], force=False)
+
+    @patch("procclean.cli.get_process_list")
+    @patch("procclean.cli.filter_by_cwd")
+    @patch("procclean.cli.kill_processes")
+    @patch("os.getcwd")
+    def test_kill_with_cwd_empty_uses_getcwd(
+        self, mock_getcwd, mock_kill, mock_filter, mock_get_procs, sample_processes
+    ):
+        """Should use current directory when --cwd has no value."""
+        mock_getcwd.return_value = "/current/dir"
+        mock_get_procs.return_value = sample_processes
+        mock_filter.return_value = sample_processes[:1]
+        mock_kill.return_value = [(1, True, "terminated")]
+
+        parser = create_parser()
+        args = parser.parse_args(["kill", "--cwd", "-y"])
+        cmd_kill(args)
+
+        mock_filter.assert_called_once_with(sample_processes, "/current/dir")
+
+    @patch("procclean.cli.get_process_list")
+    @patch("procclean.cli.filter_by_cwd")
+    def test_kill_with_no_matches(self, mock_filter, mock_get_procs, capsys):
+        """Should print message when no processes match filters."""
+        mock_get_procs.return_value = []
+        mock_filter.return_value = []
+
+        parser = create_parser()
+        args = parser.parse_args(["kill", "--cwd", "/nonexistent", "-y"])
+        result = cmd_kill(args)
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "No processes match" in captured.out
 
 
 class TestCmdMemory:
