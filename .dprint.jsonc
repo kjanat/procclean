@@ -24,9 +24,13 @@
       {
         /** Formats toml files */
         "command": "uvx tombi format --stdin-filename {{file_path}} -",
-        "exts": [
-          "toml"
-        ],
+        "exts": ["toml"],
+      },
+      {
+        /** Formats svg files */
+        "command": "npx -y svgo --indent {{indent_width}} --precision 1 --final-newline --multipass --pretty --input {{file_path}}",
+        "exts": ["svg"],
+        "stdin": false,
       },
     ],
   },

@@ -452,6 +452,9 @@ wheels = [
 linkify = [
     { name = "linkify-it-py", marker = "sys_platform == 'linux'" },
 ]
+plugins = [
+    { name = "mdit-py-plugins", marker = "sys_platform == 'linux'" },
+]
 
 [[package]]
 name = "markupsafe"
@@ -788,6 +791,7 @@ mypy = [
     { name = "types-tabulate", marker = "sys_platform == 'linux'" },
 ]
 site = [
+    { name = "markdown-it-py", extra = ["plugins"], marker = "sys_platform == 'linux'" },
     { name = "mkdocs", marker = "sys_platform == 'linux'" },
     { name = "mkdocs-material", extra = ["imaging"], marker = "sys_platform == 'linux'" },
     { name = "mkdocs-rich-argparse", marker = "sys_platform == 'linux'" },
@@ -822,6 +826,7 @@ mypy = [
     { name = "types-tabulate", specifier = ">=0.9.0.20241207" },
 ]
 site = [
+    { name = "markdown-it-py", extras = ["plugins"], specifier = ">=4.0.0" },
     { name = "mkdocs", specifier = ">=1.6.1" },
     { name = "mkdocs-material", extras = ["imaging"], specifier = ">=9.7.1" },
     { name = "mkdocs-rich-argparse", git = "https://github.com/kjanat/mkdocs_rich_argparse.git?branch=prog-style" },

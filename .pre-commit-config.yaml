@@ -7,7 +7,13 @@ ci:
   autofix_prs: true
   autoupdate_schedule: weekly
   submodules: false
-  skip: [toml-format-online, toml-lint-online, dprint-staged]
+  skip: [
+    toml-format-online,
+    toml-lint-online,
+    dprint-staged,
+    generate-cli-docs,
+    generate-screenshots,
+  ]
 fail_fast: false
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -73,4 +79,18 @@ repos:
         name: dprint (staged)
         entry: dprint fmt --staged
         language: system
+        pass_filenames: false
+
+      - id: generate-cli-docs
+        name: Generate CLI docs
+        entry: ./scripts/generate_cli_docs.py
+        language: system
+        files: ^src/procclean/cli/
+        pass_filenames: false
+
+      - id: generate-screenshots
+        name: Generate TUI screenshots
+        entry: ./scripts/generate_screenshots.py
+        language: system
+        files: ^(src/procclean/tui/|scripts/generate_screenshots\.py)
         pass_filenames: false

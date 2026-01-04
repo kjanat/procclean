@@ -30,7 +30,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/kjanat/procclean"
+Homepage = "https://kjanat.github.io/procclean/"
 Repository = "https://github.com/kjanat/procclean"
 
 [project.scripts]
@@ -52,6 +52,7 @@ mypy = [
   "types-tabulate>=0.9.0.20241207",
 ]
 site = [
+  "markdown-it-py[plugins]>=4.0.0",
   "mkdocs>=1.6.1",
   "mkdocs-material[imaging]>=9.7.1",
   "mkdocs-rich-argparse",
