@@ -1,4 +1,5 @@
 {
+  "prettier": { "allowed": false },
   "file_types": {
     "Shell Script": ["pc"],
     "XML": ["svg"],
