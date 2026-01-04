@@ -1,7 +1,17 @@
-# procclean
+<p align="center">
+  <img src="logo/procclean-transparent.svg" alt="procclean" width="500">
+</p>
 
-Interactive TUI for exploring and cleaning up processes - find orphans, memory
-hogs, and kill them.
+<p align="center">
+  <em>Interactive TUI for exploring and cleaning up processes - find orphans, memory hogs, and kill them.</em>
+</p>
+
+<p align="center">
+  <a href="https://github.com/kjanat/procclean/blob/master/LICENSE"><img src="https://img.shields.io/github/license/kjanat/procclean" alt="License"></a>
+  <a href="https://github.com/kjanat/procclean/releases"><img src="https://img.shields.io/github/v/release/kjanat/procclean" alt="Release"></a>
+  <img src="https://img.shields.io/badge/python-3.14%2B-blue" alt="Python 3.14+">
+  <img src="https://img.shields.io/badge/platform-linux-lightgrey" alt="Linux">
+</p>
 
 ## Features
 

@@ -48,7 +48,7 @@ dev = [
 ]
 site = [
   "mkdocs>=1.6.1",
-  "mkdocs-material>=9.7.1",
+  "mkdocs-material[imaging]>=9.7.1",
 ]
 
 [build-system]

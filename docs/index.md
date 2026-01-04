@@ -1,4 +1,6 @@
-# procclean
+<figure markdown="span">
+  <img src="assets/logo.svg" alt="procclean" class="hero-logo">
+</figure>
 
 Interactive TUI for exploring and cleaning up processes - find orphans, memory
 hogs, and kill them.

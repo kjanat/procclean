@@ -34,10 +34,16 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
+      - name: Check pngquant availability
+        id: check-pngquant
+        run: echo "available=$(command -v pngquant >/dev/null && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
       - name: Build documentation
         run: uv run mkdocs build --strict
         env:
           UV_WORKING_DIR: site
+          SITE_URL: https://kjanat.github.io/procclean/
+          PNGQUANT: ${{ steps.check-pngquant.outputs.available }}
 
       - name: Create robots.txt to block indexing
         working-directory: site

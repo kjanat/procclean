@@ -1,0 +1,33 @@
+/* Custom color scheme matching procclean logo */
+/* Logo colors: cyan #54ebdd, lime #98f641, bg #454444, dark #2c2d2c */
+
+[data-md-color-scheme="slate"] {
+  --md-hue: 168;
+
+  /* Site background - matches logo bg */
+  --md-default-bg-color: #454444;
+
+  /* Primary - cyan from logo */
+  --md-primary-fg-color: #54ebdd;
+  --md-primary-fg-color--light: #7af0e5;
+  --md-primary-fg-color--dark: #3dc9bc;
+  --md-primary-bg-color: #2c2d2c;
+  --md-primary-bg-color--light: #454444;
+
+  /* Accent - lime from logo */
+  --md-accent-fg-color: #98f641;
+  --md-accent-fg-color--transparent: rgba(152, 246, 65, 0.1);
+
+  /* Code blocks */
+  --md-code-bg-color: #2c2d2c;
+}
+
+/* Hero logo on homepage */
+.hero-logo {
+  width: 400px;
+  height: auto;
+}
+
+.md-content figure {
+  text-align: center;
+}
