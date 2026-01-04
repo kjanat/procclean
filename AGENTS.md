@@ -23,6 +23,9 @@
 - **All tags MUST be signed** (`-s` flag) with descriptions
 - **Never delete tags** - use `git tag -f` to overwrite
 - **Never amend pushed commits** - check `git status` for divergence first
+- **When moving a tag, ALWAYS specify commit SHA**:
+  `git tag -s -f v0.X.0 <SHA> -m "..."`\
+  (without SHA, tag goes to HEAD - wrong!)
 
 ## Code Style
 
