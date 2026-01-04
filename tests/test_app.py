@@ -198,12 +198,13 @@ class TestProcessCleanerApp:
 
     @pytest.mark.asyncio
     async def test_kill_without_selection_shows_message(self, mock_process_data):
-        """Should show message when trying to kill with no selection."""
+        """Should show notification when trying to kill with no selection."""
         app = ProcessCleanerApp()
         async with app.run_test() as pilot:
             app.selected_pids.clear()
             await pilot.press("k")
-            assert "No processes selected" in app.status_message
+            # Notification is shown via notify() - verify no screen was pushed
+            assert not app.screen_stack[1:]  # Only main screen
 
     @pytest.mark.asyncio
     async def test_memory_bar_displays(self, mock_process_data):
@@ -226,11 +227,9 @@ class TestProcessCleanerApp:
         mock_process_data["get_procs"].return_value = high_mem_procs
 
         app = ProcessCleanerApp()
-        async with app.run_test() as pilot:
-            # Switch to high-mem view
+        async with app.run_test():
+            # Switch to high-mem view (watcher auto-updates table)
             app.current_view = "high-mem"
-            app.update_table()
-            await pilot.pause()
             # Only processes > 500 MB should be shown
             assert app.current_view == "high-mem"
 
@@ -246,9 +245,7 @@ class TestProcessCleanerApp:
         mock_process_data["get_procs"].return_value = [long_cwd_proc]
 
         app = ProcessCleanerApp()
-        async with app.run_test() as pilot:
-            app.update_table()
-            await pilot.pause()
+        async with app.run_test():
             # Table should have been updated with truncated cwd
             assert len(app.processes) == 1
 
@@ -261,7 +258,6 @@ class TestProcessCleanerApp:
             assert len(app.selected_pids) == 0
             # Move to first row and toggle
             await pilot.press("space")
-            await pilot.pause()
             # Should have selected one process
             assert len(app.selected_pids) == 1
 
@@ -272,12 +268,10 @@ class TestProcessCleanerApp:
         async with app.run_test() as pilot:
             # First add via toggle
             await pilot.press("space")
-            await pilot.pause()
             initial_count = len(app.selected_pids)
             assert initial_count >= 1
             # Toggle again to remove
             await pilot.press("space")
-            await pilot.pause()
             # Should have removed the process
             assert len(app.selected_pids) == initial_count - 1
 
@@ -290,9 +284,7 @@ class TestProcessCleanerApp:
             option_list = app.query_one("#view-selector", OptionList)
             # Highlight the orphans option (index 1)
             option_list.highlighted = 1
-            await pilot.pause()
             await pilot.press("enter")
-            await pilot.pause()
             # View should have changed
             assert app.current_view == "orphans"
 
@@ -302,7 +294,6 @@ class TestProcessCleanerApp:
         app = ProcessCleanerApp()
         async with app.run_test() as pilot:
             await pilot.press("s")
-            await pilot.pause()
             # All visible processes should be selected
             assert len(app.selected_pids) == len(sample_processes)
 
@@ -315,12 +306,11 @@ class TestProcessCleanerApp:
         async with app.run_test() as pilot:
             # Select a process
             app.selected_pids.add(1)
-            # Press kill
+            # Press kill - opens confirm dialog
             await pilot.press("k")
-            await pilot.pause()
             # Confirm dialog should be shown - press 'y' to confirm
             await pilot.press("y")
-            await pilot.pause()
+            await pilot.pause()  # Wait for worker to complete
             # Kill should have been called
             mock_process_data["kill"].assert_called()
 
@@ -333,9 +323,8 @@ class TestProcessCleanerApp:
         async with app.run_test() as pilot:
             app.selected_pids.add(1)
             await pilot.press("K")  # Capital K for force kill
-            await pilot.pause()
             await pilot.press("y")
-            await pilot.pause()
+            await pilot.pause()  # Wait for worker to complete
             mock_process_data["kill"].assert_called_with([1], force=True)
 
     @pytest.mark.asyncio
@@ -351,22 +340,18 @@ class TestProcessCleanerApp:
         async with app.run_test() as pilot:
             # Move to first row (which has cwd /home/user/project)
             await pilot.press("w")
-            await pilot.pause()
             assert app.cwd_filter == "/home/user/project"
-            assert "cwd=" in app.status_message
 
     @pytest.mark.asyncio
     async def test_filter_cwd_unknown(self, mock_process_data, make_process):
-        """Should show message when filtering by unknown cwd."""
+        """Should show warning when filtering by unknown cwd."""
         procs = [make_process(pid=1, name="proc1", cwd="?")]
         mock_process_data["get_procs"].return_value = procs
 
         app = ProcessCleanerApp()
         async with app.run_test() as pilot:
             await pilot.press("w")
-            await pilot.pause()
             assert app.cwd_filter is None
-            assert "Cannot filter" in app.status_message
 
     @pytest.mark.asyncio
     async def test_clear_cwd_filter(self, mock_process_data, make_process):
@@ -379,9 +364,7 @@ class TestProcessCleanerApp:
             # First set the filter
             app.cwd_filter = "/home/user/project"
             await pilot.press("W")  # Capital W to clear
-            await pilot.pause()
             assert app.cwd_filter is None
-            assert "cleared" in app.status_message
 
     @pytest.mark.asyncio
     async def test_cwd_filter_applies_to_table(self, mock_process_data, make_process):
@@ -394,13 +377,9 @@ class TestProcessCleanerApp:
         mock_process_data["get_procs"].return_value = procs
 
         app = ProcessCleanerApp()
-        async with app.run_test() as pilot:
-            # Set cwd filter
+        async with app.run_test():
+            # Set cwd filter (watcher auto-updates table)
             app.cwd_filter = "/home/user/project"
-            app.update_table()
-            await pilot.pause()
-            # The filter should be applied (can't easily check table rows,
-            # but we verify the filter is set)
             assert app.cwd_filter == "/home/user/project"
 
     @pytest.mark.asyncio
@@ -413,10 +392,9 @@ class TestProcessCleanerApp:
         mock_process_data["get_procs"].return_value = procs
 
         app = ProcessCleanerApp()
-        async with app.run_test() as pilot:
+        async with app.run_test():
+            # Watcher auto-updates table when sort_key changes
             app.sort_key = "cwd"
-            app.update_table()
-            await pilot.pause()
             # Should not raise, even with None cwd
             assert app.sort_key == "cwd"
 
@@ -438,9 +416,7 @@ class TestConfirmKillScreen:
             app.push_screen(
                 ConfirmKillScreen(sample_processes[:2], force=False), callback
             )
-            await pilot.pause()
             await pilot.press("y")
-            await pilot.pause()
             assert result is True
 
     @pytest.mark.asyncio
@@ -457,9 +433,8 @@ class TestConfirmKillScreen:
             app.push_screen(
                 ConfirmKillScreen(sample_processes[:2], force=False), callback
             )
-            await pilot.pause()
+            await pilot.pause()  # Wait for screen to mount before clicking
             await pilot.click("#yes")
-            await pilot.pause()
             assert result is True
 
     @pytest.mark.asyncio
@@ -476,19 +451,17 @@ class TestConfirmKillScreen:
             app.push_screen(
                 ConfirmKillScreen(sample_processes[:2], force=False), callback
             )
-            await pilot.pause()
+            await pilot.pause()  # Wait for screen to mount before clicking
             await pilot.click("#no")
-            await pilot.pause()
             assert result is False
 
     @pytest.mark.asyncio
     async def test_more_than_10_processes(self, mock_process_data, many_processes):
         """Should show '... and N more' when >10 processes."""
         app = ProcessCleanerApp()
-        async with app.run_test() as pilot:
+        async with app.run_test():
             # Push confirm screen with 15 processes
             app.push_screen(ConfirmKillScreen(many_processes, force=False))
-            await pilot.pause()
             # The screen should be displayed (tests line 55)
 
     @pytest.mark.asyncio
@@ -505,9 +478,7 @@ class TestConfirmKillScreen:
             app.push_screen(
                 ConfirmKillScreen(sample_processes[:2], force=False), callback
             )
-            await pilot.pause()
             await pilot.press("n")
-            await pilot.pause()
             assert result is False
 
     @pytest.mark.asyncio
@@ -524,9 +495,7 @@ class TestConfirmKillScreen:
             app.push_screen(
                 ConfirmKillScreen(sample_processes[:2], force=False), callback
             )
-            await pilot.pause()
             await pilot.press("escape")
-            await pilot.pause()
             assert result is False
 
     @pytest.mark.asyncio

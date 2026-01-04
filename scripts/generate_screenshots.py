@@ -20,7 +20,7 @@ from unittest.mock import patch
 from textual.widgets import OptionList
 
 from procclean.core import HIGH_MEMORY_THRESHOLD_MB, ProcessInfo
-from procclean.tui.app import ProcessCleanerApp
+from procclean.tui.app import ProcessCleanerApp, ViewType
 
 log = logging.getLogger(__name__)
 
@@ -197,7 +197,7 @@ class ScreenshotConfig(NamedTuple):
     """Configuration for a single screenshot."""
 
     filename: str
-    view: str = "all"
+    view: ViewType = "all"
     selected_pids: frozenset[int] = frozenset()
 
 
