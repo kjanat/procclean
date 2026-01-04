@@ -533,7 +533,7 @@ wheels = [
 [[package]]
 name = "mkdocs-rich-argparse"
 version = "0.1.2"
-source = { git = "https://github.com/kjanat/mkdocs_rich_argparse.git?branch=prog-style#7eeb793ce2a1a8f405031aa9d32a13a7a1eeef07" }
+source = { git = "https://github.com/kjanat/mkdocs_rich_argparse.git?branch=prog-style#17a7f587fe9384a96f5a87efee6da9bb8323670c" }
 dependencies = [
     { name = "mkdocs", marker = "sys_platform == 'linux'" },
     { name = "rich", marker = "sys_platform == 'linux'" },
