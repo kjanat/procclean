@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo/procclean-transparent.svg" alt="procclean" width="500">
+  <img src="https://raw.github.com/kjanat/procclean/master/logo/procclean-transparent.svg" alt="procclean" width="500">
 </p>
 
 <p align="center">
@@ -7,8 +7,9 @@
 </p>
 
 <p align="center">
+  <a href="https://pypi.org/project/procclean/"><img src="https://img.shields.io/pypi/v/procclean" alt="PyPI"></a>
   <a href="https://github.com/kjanat/procclean/blob/master/LICENSE"><img src="https://img.shields.io/github/license/kjanat/procclean" alt="License"></a>
-  <a href="https://github.com/kjanat/procclean/releases"><img src="https://img.shields.io/github/v/release/kjanat/procclean" alt="Release"></a>
+  <a href="https://procclean.kjanat.com"><img src="https://img.shields.io/badge/docs-mkdocs-blue" alt="Docs"></a>
   <img src="https://img.shields.io/badge/python-3.14%2B-blue" alt="Python 3.14+">
   <img src="https://img.shields.io/badge/platform-linux-lightgrey" alt="Linux">
 </p>
@@ -27,13 +28,19 @@
 ## Installation
 
 ```bash
-uv tool install git+https://github.com/kjanat/procclean
+pip install procclean
 ```
 
-Or run directly:
+Or with [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uvx git+https://github.com/kjanat/procclean
+uv tool install procclean
+```
+
+Run without installing:
+
+```bash
+uvx procclean
 ```
 
 ## Usage
