@@ -1,7 +1,7 @@
-# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+# yaml-language-server: $schema=mkdocs.schema.json
 ---
 site_name: procclean
-site_url: !ENV SITE_URL
+site_url: !ENV [CF_URL, SITE_URL, ""]
 site_description: Interactive TUI for exploring and cleaning up processes
 site_author: Kaj Kowalski
 
@@ -20,7 +20,7 @@ theme:
   custom_dir: overrides
   icon:
     logo: procclean/icon
-  favicon: assets/favicon.svg
+  favicon: assets/images/favicon.svg
   palette:
     scheme: slate
     primary: custom
@@ -28,11 +28,17 @@ theme:
   features:
     - content.action.view
     - content.code.copy
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - toc.integrate
     - navigation.instant
     - navigation.instant.prefetch
+    - navigation.instant.progress
+    - navigation.instant.preview
     - navigation.path
     - navigation.sections
     - navigation.indexes
+    - navigation.footer
     - toc.follow
     - navigation.top
     - search.highlight
@@ -67,6 +73,8 @@ markdown_extensions:
   - abbr
   - admonition
   - attr_list
+  - md_in_html
+  - pymdownx.details
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.snippets:
@@ -89,10 +97,12 @@ hooks:
 
 watch:
   - includes
+  - ../docs
 
 extra:
   generator: false
   private: !ENV [PRIVATE, false] # Set PRIVATE=true to block indexing
+  homepage: !ENV [CF_URL, SITE_URL, ""]
 
 extra_css:
   - stylesheets/extra.css

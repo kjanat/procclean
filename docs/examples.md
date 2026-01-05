@@ -40,28 +40,36 @@ procclean mem                   # Show memory summary
 procclean mem -f json           # JSON output
 ```
 
-## Output Formats
+<div class="grid cards" markdown>
 
-The `-f` flag supports:
+- :material-clock-fast:{ .lg .middle } **Output Formats**
 
-| Format  | Description                    |
-| ------- | ------------------------------ |
-| `table` | Human-readable table (default) |
-| `json`  | JSON array for scripting       |
-| `csv`   | CSV for spreadsheets           |
-| `md`    | Markdown table                 |
+  ---
 
-## Sort Options
+  The `-f` flag supports:
 
-The `-s` flag supports:
+  | Format  | Description                    |
+  | ------- | ------------------------------ |
+  | `table` | Human-readable table (default) |
+  | `json`  | JSON array for scripting       |
+  | `csv`   | CSV for spreadsheets           |
+  | `md`    | Markdown table                 |
 
-| Field  | Description       |
-| ------ | ----------------- |
-| `mem`  | Memory usage      |
-| `cpu`  | CPU usage         |
-| `pid`  | Process ID        |
-| `name` | Process name      |
-| `cwd`  | Working directory |
+- :fontawesome-brands-markdown:{ .lg .middle } **Sort Options**
+
+  ---
+
+  The `-s` flag supports:
+
+  | Field  | Description       |
+  | ------ | ----------------- |
+  | `mem`  | Memory usage      |
+  | `cpu`  | CPU usage         |
+  | `pid`  | Process ID        |
+  | `name` | Process name      |
+  | `cwd`  | Working directory |
+
+</div>
 
 ## Common Workflows
 

@@ -8,28 +8,28 @@ procclean
 
 ![TUI Main View](assets/screenshots/tui-main.svg)
 
-## Keybindings
+??? tip "<span id="keybindings">Keybindings</span>"
 
-| Key         | Action                  |
-| ----------- | ----------------------- |
-| ++q++       | Quit                    |
-| ++r++       | Refresh                 |
-| ++k++       | Kill selected (SIGTERM) |
-| ++shift+k++ | Force kill (SIGKILL)    |
-| ++o++       | Show orphans            |
-| ++a++       | Show all                |
-| ++g++       | Show groups             |
-| ++w++       | Filter by selected cwd  |
-| ++shift+w++ | Clear cwd filter        |
-| ++space++   | Toggle selection        |
-| ++s++       | Select all visible      |
-| ++c++       | Clear selection         |
-| ++1++       | Sort by memory          |
-| ++2++       | Sort by CPU             |
-| ++3++       | Sort by PID             |
-| ++4++       | Sort by name            |
-| ++5++       | Sort by cwd             |
-| ++shift+1++ | Reverse sort order      |
+    | Key         | Action                  |
+    | ----------- | ----------------------- |
+    | ++q++       | Quit                    |
+    | ++r++       | Refresh                 |
+    | ++k++       | Kill selected (SIGTERM) |
+    | ++shift+k++ | Force kill (SIGKILL)    |
+    | ++o++       | Show orphans            |
+    | ++a++       | Show all                |
+    | ++g++       | Show groups             |
+    | ++w++       | Filter by selected cwd  |
+    | ++shift+w++ | Clear cwd filter        |
+    | ++space++   | Toggle selection        |
+    | ++s++       | Select all visible      |
+    | ++c++       | Clear selection         |
+    | ++1++       | Sort by memory          |
+    | ++2++       | Sort by CPU             |
+    | ++3++       | Sort by PID             |
+    | ++4++       | Sort by name            |
+    | ++5++       | Sort by cwd             |
+    | ++shift+1++ | Reverse sort order      |
 
 ## Views
 

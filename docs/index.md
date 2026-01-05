@@ -1,9 +1,15 @@
+---
+title: procclean
+hide:
+  - toc
+---
+
 <figure markdown="span">
-  <img src="assets/logo.svg" alt="procclean" class="hero-logo">
+  <img src="assets/images/logo.svg" alt="procclean" class="hero-logo">
 </figure>
 
 Interactive TUI for exploring and cleaning up processes - find orphans, memory
-hogs, and kill them.
+hogs, and kill them. :procclean-icon:
 
 ## Features
 

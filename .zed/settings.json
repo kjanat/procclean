@@ -30,6 +30,9 @@
           "schemaStore": {
             "enable": true
           },
+          "schemas": {
+            "site/mkdocs.schema.json": "site/mkdocs.yml"
+          },
           "customTags": [
             "!ENV scalar",
             "!ENV sequence",
@@ -38,7 +41,11 @@
             "tag:yaml.org,2002:python/name:material.extensions.emoji.twemoji",
             "tag:yaml.org,2002:python/name:pymdownx.superfences.fence_code_format",
             "tag:yaml.org,2002:python/object/apply:pymdownx.slugs.slugify mapping",
-            "emoji_index: !!python/name:material.extensions.emoji.twemoji"
+            // GPT?
+            "tag:yaml.org,2002:python/name:material.extensions.emoji.to_svg scalar",
+            "tag:yaml.org,2002:python/name:material.extensions.emoji.twemoji scalar",
+            "tag:yaml.org,2002:python/name:pymdownx.superfences.fence_code_format scalar",
+            "tag:yaml.org,2002:python/name:pymdownx.superfences.fence_div_format scalar"
           ],
         },
       },
