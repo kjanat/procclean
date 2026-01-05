@@ -27,6 +27,15 @@
   `git tag -s -f v0.X.0 <SHA> -m "..."`\
   (without SHA, tag goes to HEAD - wrong!)
 
+## GitHub Release Rules
+
+- **Never delete a release** - it may trigger workflows (like PyPI publish)
+- **To update release notes**: `gh release edit <tag> --notes "new notes"`
+- **Deleting + recreating a release** triggers the `release: [published]` event
+  again, causing duplicate workflow runs that will fail on already-published
+  versions
+- **Think before you act** - destructive operations have consequences
+
 ## Code Review Guidelines
 
 **Verify before claiming.** Every assertion in a code review must be validated
