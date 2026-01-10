@@ -298,6 +298,15 @@ wheels = [
 ]
 
 [[package]]
+name = "dprint-py"
+version = "0.51.1.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d0/b4/b510b83b010462a34b2884871797cd0ad951aa3b01f3be3c365cb1cf0676/dprint_py-0.51.1.0-py3-none-manylinux_2_17_aarch64.whl", hash = "sha256:d984026d5373d0b920b62f97de686e31e63caee75b4d86f1748069c18bf54e9e", size = 24120447, upload-time = "2025-12-29T16:15:40.086Z" },
+    { url = "https://files.pythonhosted.org/packages/17/61/54ee13a45c154449459b2a6e9b146bce2f53ca36b7d20162c2359f8a7abe/dprint_py-0.51.1.0-py3-none-manylinux_2_17_x86_64.whl", hash = "sha256:2bc1e49a1309090b938401441f516bef1cc9e21876d5db49942022f653db483a", size = 25128070, upload-time = "2025-12-29T16:15:42.704Z" },
+]
+
+[[package]]
 name = "execnet"
 version = "2.1.2"
 source = { registry = "https://pypi.org/simple" }
@@ -789,6 +798,7 @@ dev = [
     { name = "pre-commit", marker = "sys_platform == 'linux'" },
 ]
 lint = [
+    { name = "dprint-py", marker = "sys_platform == 'linux'" },
     { name = "pylint", marker = "sys_platform == 'linux'" },
     { name = "ruff", marker = "sys_platform == 'linux'" },
     { name = "tombi", marker = "sys_platform == 'linux'" },
@@ -825,6 +835,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [{ name = "pre-commit", specifier = ">=4.5.1" }]
 lint = [
+    { name = "dprint-py", specifier = ">=0.51.1.0" },
     { name = "pylint", specifier = ">=4.0.4" },
     { name = "ruff", specifier = ">=0.14.10" },
     { name = "tombi", specifier = ">=0.7.14" },
