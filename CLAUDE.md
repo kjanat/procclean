@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Session Setup
+
+Run at the start of each session:
+
+```bash
+uv sync && uv run pre-commit install --install-hooks
+```
+
 ## Commands
 
 | Task | Command |
