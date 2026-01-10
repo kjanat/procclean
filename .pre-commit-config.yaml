@@ -77,7 +77,7 @@ repos:
     hooks:
       - id: dprint-staged
         name: dprint (staged)
-        entry: dprint fmt --staged
+        entry: uv run dprint fmt --staged
         language: system
         pass_filenames: false
 
