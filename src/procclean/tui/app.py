@@ -6,6 +6,7 @@ from textual import on, work
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
+from textual.coordinate import Coordinate
 from textual.reactive import reactive
 from textual.widgets import (
     DataTable,
@@ -177,28 +178,49 @@ class ProcessCleanerApp(App):
         key_func = sort_keys.get(self.sort_key, sort_keys["memory"])
         return sorted(procs, key=key_func, reverse=self.sort_reverse)
 
+    def _filter_by_view(self) -> list[ProcessInfo]:
+        """Filter processes based on current view.
+
+        Returns:
+            Filtered list of processes for the current view.
+        """
+        if self.current_view == "orphans":
+            return [p for p in self.processes if p.is_orphan]
+        if self.current_view == "high-mem":
+            return [p for p in self.processes if p.rss_mb > HIGH_MEMORY_THRESHOLD_MB]
+        if self.current_view == "groups":
+            groups = find_similar_processes(self.processes)
+            procs: list[ProcessInfo] = []
+            for group_procs in groups.values():
+                procs.extend(group_procs)
+            return procs
+        return list(self.processes)
+
+    @staticmethod
+    def _restore_cursor(table: DataTable, cursor_pid: int | None) -> None:
+        """Restore cursor to the row with the given PID.
+
+        Args:
+            table: The DataTable to restore cursor in.
+            cursor_pid: The PID to restore cursor to, or None to skip.
+        """
+        if cursor_pid is None:
+            return
+        for row_idx in range(table.row_count):
+            row_key = table.get_row_at(row_idx)
+            if int(row_key[1]) == cursor_pid:
+                table.move_cursor(row=row_idx)
+                break
+
     def update_table(self) -> None:
         """Update the process table based on current view and sort."""
         table = self.query_one("#process-table", DataTable)
+        cursor_pid = self._get_pid_at_cursor()
         table.clear()
 
-        if self.current_view == "orphans":
-            procs = [p for p in self.processes if p.is_orphan]
-        elif self.current_view == "high-mem":
-            procs = [p for p in self.processes if p.rss_mb > HIGH_MEMORY_THRESHOLD_MB]
-        elif self.current_view == "groups":
-            groups = find_similar_processes(self.processes)
-            procs = []
-            for group_procs in groups.values():
-                procs.extend(group_procs)
-        else:
-            procs = self.processes
-
-        # Apply cwd filter
+        procs = self._filter_by_view()
         if self.cwd_filter:
             procs = filter_by_cwd(procs, self.cwd_filter)
-
-        # Apply sorting
         procs = self._sort_processes(procs)
 
         for proc in procs:
@@ -224,6 +246,7 @@ class ProcessCleanerApp(App):
                 key=str(proc.pid),
             )
 
+        self._restore_cursor(table, cursor_pid)
         self.update_status()
 
     def update_status(self) -> None:
@@ -246,6 +269,42 @@ class ProcessCleanerApp(App):
         if event.option.id and event.option.id in view_map:
             self.current_view = view_map[event.option.id]
 
+    @on(DataTable.RowSelected, "#process-table")
+    def on_row_clicked(self, event: DataTable.RowSelected) -> None:
+        """Toggle selection when a row is clicked."""
+        # Get PID from the row data (column 1 is PID)
+        row_data = event.data_table.get_row(event.row_key)
+        pid = int(row_data[1])
+
+        # Toggle selection
+        if pid in self.selected_pids:
+            self.selected_pids.remove(pid)
+            new_value = "[ ]"
+        else:
+            self.selected_pids.add(pid)
+            new_value = "[X]"
+
+        # Update just the selection cell
+        event.data_table.update_cell(
+            event.row_key, event.data_table.columns[0].key, new_value
+        )
+        self.update_status()
+
+    @on(DataTable.HeaderSelected, "#process-table")
+    def on_header_clicked(self, event: DataTable.HeaderSelected) -> None:
+        """Sort by column when header is clicked."""
+        # Map column index to sort key
+        column_sort_map: dict[int, SortKey] = {
+            1: "pid",  # PID column
+            2: "name",  # Name column
+            3: "memory",  # RAM (MB) column
+            4: "cpu",  # CPU% column
+            5: "cwd",  # CWD column
+        }
+        col_idx = event.column_index
+        if col_idx in column_sort_map:
+            self._set_sort(column_sort_map[col_idx])
+
     def action_refresh(self) -> None:
         """Refresh process data."""
         self.refresh_data()
@@ -256,10 +315,12 @@ class ProcessCleanerApp(App):
 
         Returns:
             The PID at the current cursor position, or ``None`` if there is no
-            current row selected.
+            current row selected or the table is empty.
         """
         table = self.query_one("#process-table", DataTable)
-        if table.cursor_row is None:
+        if table.cursor_row is None or table.row_count == 0:
+            return None
+        if table.cursor_row >= table.row_count:
             return None
         row_key = table.get_row_at(table.cursor_row)
         # row_key is a tuple of cell values: (selected, pid, name, ...)
@@ -280,13 +341,23 @@ class ProcessCleanerApp(App):
 
     def action_toggle_select(self) -> None:
         """Toggle selection of current row."""
+        table = self.query_one("#process-table", DataTable)
+        if table.cursor_row is None:
+            return
+
         pid = self._get_pid_at_cursor()
         if pid is not None:
+            # Toggle selection
             if pid in self.selected_pids:
                 self.selected_pids.remove(pid)
+                new_value = "[ ]"
             else:
                 self.selected_pids.add(pid)
-            self.update_table()
+                new_value = "[X]"
+
+            # Update just the selection cell, not the entire table
+            table.update_cell_at(Coordinate(table.cursor_row, 0), new_value)
+            self.update_status()
 
     def action_select_all_visible(self) -> None:
         """Select all visible processes."""
