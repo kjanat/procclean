@@ -1,5 +1,13 @@
 # AGENTS.md
 
+## Session Setup
+
+Run at the start of each session:
+
+```bash
+uv sync && uv run pre-commit install --install-hooks
+```
+
 ## Commands
 
 - **Install deps**: `uv sync`
