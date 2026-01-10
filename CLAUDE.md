@@ -1,6 +1,7 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with
+code in this repository.
 
 ## Session Setup
 
@@ -12,19 +13,19 @@ uv sync && uv run pre-commit install --install-hooks
 
 ## Commands
 
-| Task | Command |
-|------|---------|
-| Install deps | `uv sync` |
-| Run app | `uv run procclean` or `./pc` |
-| Lint | `uv run ruff check src/` and `uv run ruff format --check src/` |
-| Type check | `uv run ty check` |
-| Test all | `uv run pytest` |
-| Single test | `uv run pytest tests/test_file.py::test_name -v` |
-| Test coverage | `uv run pytest --cov -vv` |
-| Pre-commit | `uv run pre-commit install --install-hooks` |
-| Run hooks | `uv run pre-commit run --all-files` |
-| Build | `uv build` |
-| Bump version | `uv version --bump patch|minor|major` |
+| Task          | Command                                                        |
+| ------------- | -------------------------------------------------------------- |
+| Install deps  | `uv sync`                                                      |
+| Run app       | `uv run procclean` or `./pc`                                   |
+| Lint          | `uv run ruff check src/` and `uv run ruff format --check src/` |
+| Type check    | `uv run ty check`                                              |
+| Test all      | `uv run pytest`                                                |
+| Single test   | `uv run pytest tests/test_file.py::test_name -v`               |
+| Test coverage | `uv run pytest --cov -vv`                                      |
+| Pre-commit    | `uv run pre-commit install --install-hooks`                    |
+| Run hooks     | `uv run pre-commit run --all-files`                            |
+| Build         | `uv build`                                                     |
+| Bump version  | `uv version --bump patch\|minor\|major`                        |
 
 ## Architecture
 
@@ -51,7 +52,8 @@ src/procclean/
     output.py       # format_table, format_json, format_csv, format_md
 ```
 
-**Key design principle**: `core/` contains all business logic with no UI dependencies. Both `cli/` and `tui/` consume `core/` functions.
+**Key design principle**: `core/` contains all business logic with no UI
+dependencies. Both `cli/` and `tui/` consume `core/` functions.
 
 ## Code Style
 
@@ -66,7 +68,8 @@ src/procclean/
 
 - **Template strings**: `t"Hello {name}"` for safe SQL/HTML/shell interpolation
 - **Deferred annotations**: Forward references work without quotes
-- **Multiple interpreters**: `concurrent.interpreters.Interpreter` for true parallelism
+- **Multiple interpreters**: `concurrent.interpreters.Interpreter` for true
+  parallelism
 - **Exception groups**: `except ValueError, TypeError:` (brackets optional)
 
 ## Git Rules
@@ -74,7 +77,8 @@ src/procclean/
 - **All tags MUST be signed** (`-s` flag) with descriptions
 - **Never delete tags** - use `git tag -f` to overwrite
 - **Never amend pushed commits** - check `git status` for divergence first
-- **When moving a tag, ALWAYS specify commit SHA**: `git tag -s -f v0.X.0 <SHA> -m "..."`
+- **When moving a tag, ALWAYS specify commit SHA**:
+  `git tag -s -f v0.X.0 <SHA> -m "..."`
 
 ## GitHub Release Rules
 
