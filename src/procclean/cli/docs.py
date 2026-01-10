@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import argparse
 import io
-import os
 import re
 from collections import defaultdict
+from functools import partial
 from pathlib import Path
 
 from markdown_it import MarkdownIt
@@ -52,23 +52,24 @@ def _capture_help(parser: argparse.ArgumentParser) -> str:
     Returns:
         HTML string with colored help output.
     """
-    # Force colored output even when not in a TTY
-    old_force_color = os.environ.get("FORCE_COLOR")
-    os.environ["FORCE_COLOR"] = "1"
-    try:
-        parser.formatter_class = RichHelpFormatter
-        text = Text.from_ansi(parser.format_help())
-    finally:
-        if old_force_color is None:
-            os.environ.pop("FORCE_COLOR", None)
-        else:
-            os.environ["FORCE_COLOR"] = old_force_color
+    # Create a truecolor console for both formatting and export
+    # This ensures hex colors like #98f641 aren't downgraded to #00ff00
+    truecolor_console = Console(
+        file=io.StringIO(),
+        record=True,
+        force_terminal=True,
+        color_system="truecolor",
+    )
 
-    # force_terminal=True ensures colored output even when not in a TTY
-    console = Console(file=io.StringIO(), record=True, force_terminal=True)
-    console.print(text, crop=False)
+    # Pass the truecolor console to RichHelpFormatter via partial
+    parser.formatter_class = partial(RichHelpFormatter, console=truecolor_console)
+    help_text = parser.format_help()
 
-    return console.export_html(code_format=_CODE_FORMAT, inline_styles=True)
+    # Parse ANSI back to Rich Text and re-render for HTML export
+    text = Text.from_ansi(help_text)
+    truecolor_console.print(text, crop=False)
+
+    return truecolor_console.export_html(code_format=_CODE_FORMAT, inline_styles=True)
 
 
 def _argparser_to_markdown(
