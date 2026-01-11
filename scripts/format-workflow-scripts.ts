@@ -202,6 +202,7 @@ async function main() {
 
   for (const file of files) {
     try {
+      if (values.verbose) console.log(`Checking: ${file}`);
       if (await processFile(file)) anyModified = true;
     } catch (e) {
       console.error(`Error processing ${file}: ${e}`);

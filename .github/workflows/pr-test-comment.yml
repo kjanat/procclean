@@ -14,28 +14,7 @@ jobs:
   comment:
     runs-on: ubuntu-latest
     steps:
-      - name: Check for Python file changes
-        id: changes
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const { data: files } = await github.rest.pulls.listFiles({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number,
-            });
-
-            const pythonFiles = files.filter(f =>
-              (f.filename.endsWith('.py') || f.previous_filename?.endsWith('.py')) &&
-              (f.status === 'added' || f.status === 'modified' || f.status === 'renamed')
-            );
-
-            console.log(`Found ${pythonFiles.length} changed Python files`);
-            return pythonFiles.length > 0;
-          result-encoding: string
-
       - name: Create or update PR comment
-        if: steps.changes.outputs.result == 'true'
         uses: actions/github-script@v8
         with:
           script: |
@@ -44,6 +23,36 @@ jobs:
             const [shortSha, isClosed] = [headSha.substring(0, 7), state === 'closed'];
 
             const markerComment = '<!-- uvx-test-comment -->';
+
+            // Check for existing comment first (cheaper than listing all files)
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number: prNumber }
+            );
+
+            const existingComment = comments.find(c =>
+              c.body?.includes(markerComment)
+            );
+
+            // If no existing comment, check if PR has Python file changes
+            if (!existingComment) {
+              const files = await github.paginate(
+                github.rest.pulls.listFiles,
+                { owner, repo, pull_number: prNumber }
+              );
+
+              const pythonFiles = files.filter(f =>
+                (f.filename.endsWith('.py') || f.previous_filename?.endsWith('.py')) &&
+                (f.status === 'added' || f.status === 'modified' || f.status === 'renamed')
+              );
+
+              console.log(`Found ${pythonFiles.length} changed Python files`);
+
+              if (pythonFiles.length === 0) {
+                console.log('No Python files changed, skipping comment');
+                return;
+              }
+            }
 
             let body;
 
@@ -139,16 +148,6 @@ jobs:
             ---
             <sub>🤖 Auto-updated on push • Commit: ${shortSha}</sub>`;
             }
-
-            // Find existing comment (paginated to avoid duplicates)
-            const comments = await github.paginate(
-              github.rest.issues.listComments,
-              { owner, repo, issue_number: prNumber }
-            );
-
-            const existingComment = comments.find(c =>
-              c.body?.includes(markerComment)
-            );
 
             if (existingComment) {
               // Update existing comment
