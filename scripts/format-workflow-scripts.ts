@@ -32,6 +32,12 @@ Examples:
   process.exit(0);
 }
 
+/**
+ * Format JavaScript source and return the formatted result.
+ *
+ * @param code - JavaScript source to format
+ * @returns The formatted code with a trailing newline removed if present, or `null` when formatting fails
+ */
 async function formatJs(code: string): Promise<string | null> {
   const proc = Bun.spawn(["dprint", "fmt", "--stdin=js"], {
     stdin: new TextEncoder().encode(code),
@@ -43,6 +49,17 @@ async function formatJs(code: string): Promise<string | null> {
   return exitCode === 0 ? stdout.replace(/\n$/, "") : null;
 }
 
+/**
+ * Formats JavaScript code blocks under `script: |` in a GitHub Actions workflow YAML file.
+ *
+ * Detects indented `script: |` blocks, dedents their contents, runs the formatter, and reinserts
+ * the formatted code with the original block indentation. Unparseable script blocks are left
+ * unchanged. If changes are made and check mode is disabled, the file is overwritten; in check
+ * mode the function only reports that the file would be changed.
+ *
+ * @param filePath - Path to the YAML workflow file to process
+ * @returns `true` if the file was modified, `false` otherwise.
+ */
 async function processFile(filePath: string): Promise<boolean> {
   const content = await Bun.file(filePath).text();
   const lines = content.split("\n");
@@ -116,6 +133,15 @@ async function processFile(filePath: string): Promise<boolean> {
   return modified;
 }
 
+/**
+ * Discover workflow YAML files and process each to format embedded JavaScript script blocks.
+ *
+ * If positional file paths were provided, those are used; otherwise all `*.yml` files under
+ * `.github/workflows` are targeted. Prints "No workflow files found" and exits with code 0 when
+ * no targets are found. Processes files sequentially, reporting per-file errors to stderr without
+ * aborting the run. If run in check mode and any file would be modified, prints a summary message
+ * and exits with code 1.
+ */
 async function main() {
   let files: string[];
 
