@@ -290,7 +290,7 @@ class ProcessCleanerApp(App):
             new_value = "[X]"
 
         # Update the clicked row's selection cell using row_key (not cursor_row)
-        selection_column_key = event.data_table.columns[0].key
+        selection_column_key = event.data_table.ordered_columns[0].key
         event.data_table.update_cell(event.row_key, selection_column_key, new_value)
         self.update_status()
 
