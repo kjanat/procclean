@@ -185,7 +185,7 @@ class ProcessCleanerApp(App):
             Filtered list of processes for the current view.
         """
         if self.current_view == "orphans":
-            return [p for p in self.processes if p.is_orphan]
+            return [p for p in self.processes if p.is_orphan_candidate]
         if self.current_view == "high-mem":
             return [p for p in self.processes if p.rss_mb > HIGH_MEMORY_THRESHOLD_MB]
         if self.current_view == "groups":
@@ -284,10 +284,9 @@ class ProcessCleanerApp(App):
             self.selected_pids.add(pid)
             new_value = "[X]"
 
-        # Update just the selection cell
-        event.data_table.update_cell(
-            event.row_key, event.data_table.columns[0].key, new_value
-        )
+        # Update the clicked row's selection cell using row_key (not cursor_row)
+        selection_column_key = event.data_table.columns[0].key
+        event.data_table.update_cell(event.row_key, selection_column_key, new_value)
         self.update_status()
 
     @on(DataTable.HeaderSelected, "#process-table")

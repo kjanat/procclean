@@ -53,17 +53,24 @@ def _capture_help(parser: argparse.ArgumentParser) -> str:
         HTML string with colored help output.
     """
     # Create a truecolor console for both formatting and export
-    # This ensures hex colors like #98f641 aren't downgraded to #00ff00
+    # - color_system="truecolor" ensures hex colors like #98f641 aren't downgraded
+    # - width=80 ensures consistent text wrapping across environments
     truecolor_console = Console(
         file=io.StringIO(),
         record=True,
         force_terminal=True,
         color_system="truecolor",
+        width=80,
     )
 
-    # Pass the truecolor console to RichHelpFormatter via partial
-    parser.formatter_class = partial(RichHelpFormatter, console=truecolor_console)
-    help_text = parser.format_help()
+    # Save original formatter_class and restore after use
+    orig_formatter_class = parser.formatter_class
+    try:
+        # Pass the truecolor console to RichHelpFormatter via partial
+        parser.formatter_class = partial(RichHelpFormatter, console=truecolor_console)
+        help_text = parser.format_help()
+    finally:
+        parser.formatter_class = orig_formatter_class
 
     # Parse ANSI back to Rich Text and re-render for HTML export
     text = Text.from_ansi(help_text)
