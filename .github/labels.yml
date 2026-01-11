@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/kjanat/github-labelmanager/master/.github/labels.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/kjanat/github-labelmanager/v1/.github/labels.schema.json
 # GitHub Labels Configuration
 # Managed by github-labelmanager
 # https://github.com/kjanat/github-labelmanager
@@ -63,7 +63,7 @@ labels:
     description: This issue or pull request already exists
 
   - name: invalid
-    color: "#e4e669"
+    color: "#cfd3d7"
     description: This doesn't seem right
 
   # Components
