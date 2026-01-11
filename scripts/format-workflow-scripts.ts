@@ -36,17 +36,27 @@ Examples:
  * Format JavaScript source and return the formatted result.
  *
  * @param code - JavaScript source to format
+ * @param verbose - When true and formatting fails, log stderr to console
  * @returns The formatted code with a trailing newline removed if present, or `null` when formatting fails
  */
-async function formatJs(code: string): Promise<string | null> {
+async function formatJs(code: string, verbose = false): Promise<string | null> {
   const proc = Bun.spawn(["dprint", "fmt", "--stdin=js"], {
     stdin: new TextEncoder().encode(code),
     stdout: "pipe",
     stderr: "pipe",
   });
-  const stdout = await new Response(proc.stdout).text();
-  const exitCode = await proc.exited;
-  return exitCode === 0 ? stdout.replace(/\n$/, "") : null;
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(proc.stdout).text(),
+    new Response(proc.stderr).text(),
+    proc.exited,
+  ]);
+  if (exitCode !== 0) {
+    if (verbose && stderr.trim()) {
+      console.error(`dprint error: ${stderr.trim()}`);
+    }
+    return null;
+  }
+  return stdout.replace(/\n$/, "");
 }
 
 /**
@@ -93,7 +103,7 @@ async function processFile(filePath: string): Promise<boolean> {
       // Empty lines are part of the block
       if (line.trim() === "") continue;
       // If line has same or less indent and is not empty, we're done
-      if (!line.startsWith(contentIndent) || (line.startsWith(baseIndent) && !line.startsWith(contentIndent))) {
+      if (!line.startsWith(contentIndent)) {
         contentEnd = i - 1;
         break;
       }
@@ -103,7 +113,7 @@ async function processFile(filePath: string): Promise<boolean> {
     const scriptLines = lines.slice(contentStart, contentEnd + 1);
     const script = scriptLines.map(l => l.slice(contentIndent.length)).join("\n").replace(/\n+$/, "");
 
-    const formatted = await formatJs(script);
+    const formatted = await formatJs(script, values.verbose);
     if (!formatted) {
       if (values.verbose) console.log(`  Skipping unparseable script at line ${startLine + 1}`);
       continue;
