@@ -1,0 +1,172 @@
+# yaml-language-server: $schema=https://www.schemastore.org/github-workflow.json
+---
+name: PR Test Comment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for Python file changes
+        id: changes
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+
+            const pythonFiles = files.filter(f =>
+              f.filename.endsWith('.py') &&
+              (f.status === 'added' || f.status === 'modified')
+            );
+
+            console.log(`Found ${pythonFiles.length} changed Python files`);
+            return pythonFiles.length > 0;
+          result-encoding: string
+
+      - name: Create or update PR comment
+        if: steps.changes.outputs.result == 'true'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const { number: prNumber, state, merged: isMerged, merge_commit_sha, head: { sha: headSha, ref: headRef } } = context.payload.pull_request;
+            const [shortSha, isClosed] = [headSha.substring(0, 7), state === 'closed'];
+
+            const markerComment = '<!-- uvx-test-comment -->';
+
+            let body;
+
+            if (isClosed) {
+              // Get commit message for the final commit
+              const { data: commit } = await github.rest.git.getCommit({
+                owner,
+                repo,
+                commit_sha: headSha,
+              });
+              const commitMessage = commit.message.split('\n')[0]; // First line only
+
+              const status = isMerged ? '✅ Merged' : '❌ Closed';
+              const mergeInfo = isMerged && merge_commit_sha
+                ? `\n\n**Merge commit:** \`${merge_commit_sha}\``
+                : '';
+
+              body = `${markerComment}
+            ## 📦 Test this PR (archived)
+
+            > **Status:** ${status}
+
+            This PR has been ${isMerged ? 'merged' : 'closed'}. You can still test the final state:
+
+            \`\`\`bash
+            uvx --from git+https://github.com/${owner}/${repo}@${headSha} procclean
+            \`\`\`
+
+            <details>
+            <summary>📋 PR Details</summary>
+
+            | Field | Value |
+            |-------|-------|
+            | **Final commit** | \`${headSha}\` |
+            | **Commit message** | ${commitMessage} |
+            | **Branch** | \`${headRef}\` |${mergeInfo}
+
+            **Available commands:**
+            \`\`\`bash
+            # Launch TUI (default)
+            uvx --from git+https://github.com/${owner}/${repo}@${headSha} procclean
+
+            # List processes
+            uvx --from git+https://github.com/${owner}/${repo}@${headSha} procclean list
+
+            # Show memory summary
+            uvx --from git+https://github.com/${owner}/${repo}@${headSha} procclean mem
+
+            # Show help
+            uvx --from git+https://github.com/${owner}/${repo}@${headSha} procclean --help
+            \`\`\`
+
+            </details>
+
+            ---
+            <sub>🤖 Archived on ${isMerged ? 'merge' : 'close'}</sub>`;
+            } else {
+              // Active PR - show branch-based commands
+              body = `${markerComment}
+            ## 🧪 Test this PR
+
+            You can test this PR directly using \`uvx\`:
+
+            **From branch:**
+            \`\`\`bash
+            uvx --from git+https://github.com/${owner}/${repo}@${headRef} procclean
+            \`\`\`
+
+            **From specific commit (\`${shortSha}\`):**
+            \`\`\`bash
+            uvx --from git+https://github.com/${owner}/${repo}@${headSha} procclean
+            \`\`\`
+
+            <details>
+            <summary>📋 Available commands</summary>
+
+            \`\`\`bash
+            # Launch TUI (default)
+            uvx --from git+https://github.com/${owner}/${repo}@${headRef} procclean
+
+            # List processes
+            uvx --from git+https://github.com/${owner}/${repo}@${headRef} procclean list
+
+            # Show memory summary
+            uvx --from git+https://github.com/${owner}/${repo}@${headRef} procclean mem
+
+            # Show help
+            uvx --from git+https://github.com/${owner}/${repo}@${headRef} procclean --help
+            \`\`\`
+
+            </details>
+
+            ---
+            <sub>🤖 Auto-updated on push • Commit: ${shortSha}</sub>`;
+            }
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: prNumber,
+            });
+
+            const existingComment = comments.find(c =>
+              c.body.includes(markerComment)
+            );
+
+            if (existingComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existingComment.id,
+                body,
+              });
+              console.log(`Updated comment ${existingComment.id}`);
+            } else {
+              // Create new comment
+              const { data: newComment } = await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body,
+              });
+              console.log(`Created comment ${newComment.id}`);
+            }
