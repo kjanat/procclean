@@ -1,0 +1,216 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+---
+language: en-US
+tone_instructions: >-
+  Be direct, precise, and thorough. Focus on correctness, security, and
+  maintainability. Acknowledge good practices briefly.
+early_access: true
+enable_free_tier: true
+
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  high_level_summary_placeholder: '@coderabbitai summary'
+  review_status: false
+  commit_status: true
+  collapse_walkthrough: false
+  changed_files_summary: true
+  sequence_diagrams: true
+  estimate_code_review_effort: true
+  assess_linked_issues: true
+  related_issues: true
+  related_prs: true
+  suggested_labels: true
+  auto_apply_labels: true
+  suggested_reviewers: true
+  auto_assign_reviewers: true
+  # Disable decorative features for cleaner reviews
+  in_progress_fortune: false
+  poem: false
+  enable_prompt_for_ai_agents: true
+  abort_on_close: true
+
+  path_filters:
+    # Exclude generated/vendored content
+    - '!dist/**'
+    - '!*.lock'
+    - '!uv.lock'
+
+  path_instructions:
+    - path: 'src/**/*.py'
+      instructions: |
+        Python 3.14+ codebase using modern type syntax (list[X], X | None).
+        Uses ruff for linting/formatting, ty for type checking.
+        Prefer dataclasses over dicts. Catch specific exceptions.
+        Check for OWASP top 10 vulnerabilities.
+    - path: 'tests/**/*.py'
+      instructions: |
+        Tests use pytest. Check for proper assertions, edge cases,
+        and that tests actually verify the behavior described.
+    - path: '*.md'
+      instructions: |
+        Documentation follows standard markdown. Verify links work
+        and content is accurate and up-to-date.
+    - path: '.github/**/*.yml'
+      instructions: |
+        GitHub Actions workflows. Check for security issues like
+        command injection, missing permissions, and pinned actions.
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+    ignore_title_keywords:
+      - WIP
+      - DO NOT MERGE
+
+  finishing_touches:
+    docstrings:
+      enabled: true
+    unit_tests:
+      enabled: true
+
+  pre_merge_checks:
+    docstrings:
+      mode: warning
+      threshold: 80
+    title:
+      mode: warning
+    description:
+      mode: warning
+    issue_assessment:
+      mode: warning
+
+  tools:
+    # === Python tools (this is a Python project) ===
+    ruff:
+      enabled: true
+    # Disable redundant Python linters - ruff covers these
+    flake8:
+      enabled: false
+    pylint:
+      enabled: false
+
+    # === Shell/YAML/Markdown (used in this project) ===
+    shellcheck:
+      enabled: true
+    yamllint:
+      enabled: true
+    markdownlint:
+      enabled: true
+    actionlint:
+      enabled: true
+
+    # === Security scanning ===
+    gitleaks:
+      enabled: true
+    semgrep:
+      enabled: true
+    checkov:
+      enabled: true
+
+    # === General tools ===
+    github-checks:
+      enabled: true
+      timeout_ms: 90000
+    languagetool:
+      enabled: true
+      level: default
+    dotenvLint:
+      enabled: true
+    osvScanner:
+      enabled: true
+
+    # === AST pattern matching ===
+    ast-grep:
+      essential_rules: true
+    biome:
+      enabled: false
+    hadolint:
+      enabled: false  # No Dockerfiles
+    swiftlint:
+      enabled: false
+    phpstan:
+      enabled: false
+    phpmd:
+      enabled: false
+    phpcs:
+      enabled: false
+    golangci-lint:
+      enabled: false
+    detekt:
+      enabled: false
+    eslint:
+      enabled: false
+    fortitudeLint:
+      enabled: false
+    rubocop:
+      enabled: false
+    buf:
+      enabled: false
+    regal:
+      enabled: false
+    pmd:
+      enabled: false
+    clang:
+      enabled: false
+    cppcheck:
+      enabled: false
+    circleci:
+      enabled: false
+    clippy:
+      enabled: false
+    sqlfluff:
+      enabled: false
+    prismaLint:
+      enabled: false
+    oxc:
+      enabled: false
+    shopifyThemeCheck:
+      enabled: false
+    luacheck:
+      enabled: false
+    brakeman:
+      enabled: false
+    htmlhint:
+      enabled: false
+    checkmake:
+      enabled: false
+
+chat:
+  art: false  # Disable ASCII/emoji art for cleaner responses
+  auto_reply: true
+  integrations:
+    jira:
+      usage: auto
+    linear:
+      usage: auto
+
+knowledge_base:
+  opt_out: false
+  web_search:
+    enabled: true
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - '**/AGENT.md'
+      - '**/AGENTS.md'
+      - '**/CLAUDE.md'
+      - .github/copilot-instructions.md
+  learnings:
+    scope: auto
+  issues:
+    scope: auto
+  pull_requests:
+    scope: auto
+
+code_generation:
+  docstrings:
+    language: en-US
+  unit_tests:
+    path_instructions:
+      - path: 'src/**/*.py'
+        instructions: |
+          Generate pytest tests. Use fixtures where appropriate.
+          Test edge cases and error conditions.
