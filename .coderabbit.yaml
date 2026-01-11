@@ -12,7 +12,7 @@ reviews:
   request_changes_workflow: false
   high_level_summary: true
   high_level_summary_placeholder: '@coderabbitai summary'
-  review_status: true
+  review_status: false
   commit_status: true
   collapse_walkthrough: false
   changed_files_summary: true
@@ -122,9 +122,9 @@ reviews:
     osvScanner:
       enabled: true
 
-    # === Disabled - not used in this Python project ===
+    # === AST pattern matching ===
     ast-grep:
-      essential_rules: false
+      essential_rules: true
     biome:
       enabled: false
     hadolint:
