@@ -1,0 +1,50 @@
+# yaml-language-server: $schema=https://www.schemastore.org/github-workflow.json
+---
+name: Update Favicon
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - logo/icon.svg
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-favicon:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install ImageMagick
+        run: sudo apt-get update && sudo apt-get install -y imagemagick
+
+      - name: Convert SVG to ICO
+        run: |
+          convert -background none logo/icon.svg \
+            -define icon:auto-resize=256,128,64,48,32,16 \
+            docs/assets/images/favicon.ico
+          cp docs/assets/images/favicon.ico docs/favicon.ico
+
+      - name: Check for changes
+        id: check
+        run: |
+          if git diff --quiet docs/assets/images/favicon.ico docs/favicon.ico; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/assets/images/favicon.ico docs/favicon.ico
+          git commit -m "chore: regenerate favicon.ico from updated icon.svg"
+          git push
