@@ -173,6 +173,7 @@ procclean mem                       # Show memory summary
 | `k`     | Kill selected (SIGTERM) |
 | `K`     | Force kill (SIGKILL)    |
 | `o`     | Show orphans            |
+| `O`     | Show killable           |
 | `a`     | Show all                |
 | `g`     | Show groups             |
 | `w`     | Filter by selected cwd  |

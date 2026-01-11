@@ -33,7 +33,7 @@ from procclean.core import (
 from .screens import ConfirmKillScreen
 
 # Type aliases
-ViewType = Literal["all", "orphans", "groups", "high-mem"]
+ViewType = Literal["all", "orphans", "killable", "groups", "high-mem"]
 SortKey = Literal["memory", "cpu", "pid", "name", "cwd"]
 
 
@@ -54,6 +54,7 @@ class ProcessCleanerApp(App):
         Binding("k", "kill_selected", "Kill"),
         Binding("K", "force_kill_selected", "Force Kill"),
         Binding("o", "show_orphans", "Orphans"),
+        Binding("O", "show_killable", "Killable"),
         Binding("a", "show_all", "All"),
         Binding("g", "show_groups", "Groups"),
         Binding("w", "filter_cwd", "Filter CWD"),
@@ -94,6 +95,7 @@ class ProcessCleanerApp(App):
                 yield OptionList(
                     Option("All Processes", id="view-all"),
                     Option("Orphaned", id="view-orphans"),
+                    Option("Killable", id="view-killable"),
                     Option("Process Groups", id="view-groups"),
                     Option("High Memory (>500MB)", id="view-high-mem"),
                     id="view-selector",
@@ -185,6 +187,8 @@ class ProcessCleanerApp(App):
             Filtered list of processes for the current view.
         """
         if self.current_view == "orphans":
+            return [p for p in self.processes if p.is_orphan]
+        if self.current_view == "killable":
             return [p for p in self.processes if p.is_orphan_candidate]
         if self.current_view == "high-mem":
             return [p for p in self.processes if p.rss_mb > HIGH_MEMORY_THRESHOLD_MB]
@@ -263,6 +267,7 @@ class ProcessCleanerApp(App):
         view_map: dict[str, ViewType] = {
             "view-all": "all",
             "view-orphans": "orphans",
+            "view-killable": "killable",
             "view-groups": "groups",
             "view-high-mem": "high-mem",
         }
@@ -373,6 +378,10 @@ class ProcessCleanerApp(App):
     def action_show_orphans(self) -> None:
         """Switch to orphans view."""
         self.current_view = "orphans"
+
+    def action_show_killable(self) -> None:
+        """Switch to killable orphans view (orphans not in tmux)."""
+        self.current_view = "killable"
 
     def action_show_all(self) -> None:
         """Switch to all processes view."""
