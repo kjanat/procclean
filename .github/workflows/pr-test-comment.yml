@@ -26,8 +26,8 @@ jobs:
             });
 
             const pythonFiles = files.filter(f =>
-              f.filename.endsWith('.py') &&
-              (f.status === 'added' || f.status === 'modified')
+              (f.filename.endsWith('.py') || f.previous_filename?.endsWith('.py')) &&
+              (f.status === 'added' || f.status === 'modified' || f.status === 'renamed')
             );
 
             console.log(`Found ${pythonFiles.length} changed Python files`);
@@ -140,15 +140,14 @@ jobs:
             <sub>🤖 Auto-updated on push • Commit: ${shortSha}</sub>`;
             }
 
-            // Find existing comment
-            const { data: comments } = await github.rest.issues.listComments({
-              owner,
-              repo,
-              issue_number: prNumber,
-            });
+            // Find existing comment (paginated to avoid duplicates)
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number: prNumber }
+            );
 
             const existingComment = comments.find(c =>
-              c.body.includes(markerComment)
+              c.body?.includes(markerComment)
             );
 
             if (existingComment) {

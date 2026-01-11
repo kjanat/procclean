@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Format JavaScript embedded in GitHub Actions workflow YAML files.
- * Uses yq + dprint to extract, format, and re-insert script blocks.
+ * Uses dprint to format script blocks in-place.
  */
 
 import { parseArgs } from "util";
@@ -17,7 +17,7 @@ const { values, positionals } = parseArgs({
 });
 
 if (values.help) {
-  console.log(`Usage: bun scripts/format-workflow-scripts.ts [options] [file...]
+  console.log(`Usage: ./scripts/format-workflow-scripts.ts [options] [file...]
 
 Options:
   -h, --help     Show this help message
@@ -25,9 +25,9 @@ Options:
   -v, --verbose  Show detailed output
 
 Examples:
-  bun scripts/format-workflow-scripts.ts
-  bun scripts/format-workflow-scripts.ts .github/workflows/ci.yml
-  bun scripts/format-workflow-scripts.ts --check
+  ./scripts/format-workflow-scripts.ts
+  ./scripts/format-workflow-scripts.ts .github/workflows/ci.yml
+  ./scripts/format-workflow-scripts.ts --check
 `);
   process.exit(0);
 }
@@ -144,22 +144,53 @@ async function processFile(filePath: string): Promise<boolean> {
 }
 
 /**
+ * Check if dprint is available in PATH.
+ * Exits with error message and code 1 if not found.
+ */
+function checkDprintAvailable(): void {
+  if (!Bun.which("dprint")) {
+    console.error("Error: dprint is not installed or not in PATH");
+    console.error("\nInstall dprint:");
+    console.error("  curl -fsSL https://dprint.dev/install.sh | sh");
+    console.error("  # or: brew install dprint");
+    console.error("  # or: cargo install dprint");
+    process.exit(1);
+  }
+}
+
+/**
  * Discover workflow YAML files and process each to format embedded JavaScript script blocks.
  *
- * If positional file paths were provided, those are used; otherwise all `*.yml` files under
- * `.github/workflows` are targeted. Prints "No workflow files found" and exits with code 0 when
- * no targets are found. Processes files sequentially, reporting per-file errors to stderr without
- * aborting the run. If run in check mode and any file would be modified, prints a summary message
- * and exits with code 1.
+ * If positional file paths were provided, those are used; otherwise all `*.yml` and `*.yaml`
+ * files under `.github/workflows` are targeted. Prints "No workflow files found" and exits
+ * with code 0 when no targets are found. Processes files sequentially, reporting per-file
+ * errors to stderr without aborting the run. If run in check mode and any file would be
+ * modified, prints a summary message and exits with code 1.
  */
 async function main() {
+  checkDprintAvailable();
   let files: string[];
 
   if (positionals.length > 0) {
     files = positionals;
   } else {
-    const glob = new Bun.Glob("**/*.yml");
-    files = Array.from(glob.scanSync({ cwd: ".github/workflows" })).map(f => `.github/workflows/${f}`);
+    const workflowDir = ".github/workflows";
+    let found: string[] = [];
+    try {
+      const ymlGlob = new Bun.Glob("**/*.yml");
+      const yamlGlob = new Bun.Glob("**/*.yaml");
+      const ymlFiles = Array.from(ymlGlob.scanSync({ cwd: workflowDir }));
+      const yamlFiles = Array.from(yamlGlob.scanSync({ cwd: workflowDir }));
+      found = [...new Set([...ymlFiles, ...yamlFiles])];
+    } catch (e: unknown) {
+      // Handle missing directory (ENOENT)
+      if (e && typeof e === "object" && "code" in e && e.code === "ENOENT") {
+        found = [];
+      } else {
+        throw e;
+      }
+    }
+    files = found.map(f => `${workflowDir}/${f}`);
   }
 
   if (files.length === 0) {
