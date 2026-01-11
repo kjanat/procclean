@@ -319,8 +319,6 @@ class ProcessCleanerApp(App):
         table = self.query_one("#process-table", DataTable)
         if table.cursor_row is None or table.row_count == 0:
             return None
-        if table.cursor_row >= table.row_count:
-            return None
         row_key = table.get_row_at(table.cursor_row)
         # row_key is a tuple of cell values: (selected, pid, name, ...)
         return int(row_key[1])
