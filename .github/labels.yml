@@ -1,0 +1,120 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/kjanat/github-labelmanager/v1/.github/labels.schema.json
+# GitHub Labels Configuration
+# Managed by github-labelmanager
+# https://github.com/kjanat/github-labelmanager
+---
+
+labels:
+  # Issue Types
+  - name: bug
+    color: "#d73a4a"
+    description: Something isn't working
+
+  - name: feature
+    color: "#a2eeef"
+    description: New feature or request
+    aliases: [enhancement]
+
+  - name: documentation
+    color: "#0075ca"
+    description: Improvements or additions to documentation
+    aliases: [docs]
+
+  - name: question
+    color: "#d876e3"
+    description: Further information is requested
+
+  - name: refactor
+    color: "#fbca04"
+    description: Code refactoring without behavior change
+
+  # Priority
+  - name: "priority: critical"
+    color: "#b60205"
+    description: Requires immediate attention
+
+  - name: "priority: high"
+    color: "#d93f0b"
+    description: Should be addressed soon
+
+  - name: "priority: medium"
+    color: "#fbca04"
+    description: Normal priority
+
+  - name: "priority: low"
+    color: "#0e8a16"
+    description: Nice to have, not urgent
+
+  # Status
+  - name: blocked
+    color: "#b60205"
+    description: Waiting on external dependency or decision
+
+  - name: "needs review"
+    color: "#7057ff"
+    description: Ready for review
+
+  - name: wontfix
+    color: "#ffffff"
+    description: This will not be worked on
+
+  - name: duplicate
+    color: "#cfd3d7"
+    description: This issue or pull request already exists
+
+  - name: invalid
+    color: "#cfd3d7"
+    description: This doesn't seem right
+
+  # Components
+  - name: "area: cli"
+    color: "#1d76db"
+    description: Related to CLI interface
+
+  - name: "area: tui"
+    color: "#1d76db"
+    description: Related to TUI interface
+
+  - name: "area: core"
+    color: "#1d76db"
+    description: Related to core business logic
+
+  - name: "area: tests"
+    color: "#1d76db"
+    description: Related to testing
+
+  - name: "area: ci/cd"
+    color: "#1d76db"
+    description: Related to CI/CD workflows
+
+  # Community
+  - name: "good first issue"
+    color: "#7057ff"
+    description: Good for newcomers
+
+  - name: "help wanted"
+    color: "#008672"
+    description: Extra attention is needed
+
+  # Dependencies
+  - name: dependencies
+    color: "#0366d6"
+    description: Pull requests that update a dependency file
+
+  - name: security
+    color: "#ee0701"
+    description: Security-related issues or fixes
+
+  # Maintenance
+  - name: chore
+    color: "#fef2c0"
+    description: Maintenance tasks and housekeeping
+
+  - name: performance
+    color: "#5319e7"
+    description: Performance improvements
+
+# Labels to delete (if they exist)
+delete:
+  - enhancement # Renamed to feature via alias
+  - docs # Renamed to documentation via alias
