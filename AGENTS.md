@@ -1,5 +1,8 @@
 # AGENTS.md
 
+**Repository:**
+[github.com/kjanat/procclean](https://github.com/kjanat/procclean)
+
 ## Session Setup
 
 Run at the start of each session:
