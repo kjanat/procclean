@@ -8,42 +8,42 @@ labels:
   # Issue Types
   - name: bug
     color: "#d73a4a"
-    description: Something isn't working
+    description: Something isn't working as expected
 
   - name: feature
     color: "#a2eeef"
-    description: New feature or request
+    description: New feature or enhancement request
     aliases: [enhancement]
 
   - name: documentation
     color: "#0075ca"
-    description: Improvements or additions to documentation
+    description: Docs improvements, typos, examples, guides
     aliases: [docs]
 
   - name: question
     color: "#d876e3"
-    description: Further information is requested
+    description: Clarification needed on behavior or usage
 
   - name: refactor
     color: "#fbca04"
-    description: Code refactoring without behavior change
+    description: Code improvements without changing functionality
 
   # Priority
   - name: "priority: critical"
     color: "#b60205"
-    description: Requires immediate attention
+    description: Urgent - breaks core functionality or security
 
   - name: "priority: high"
     color: "#d93f0b"
-    description: Should be addressed soon
+    description: Important - should be addressed in next release
 
   - name: "priority: medium"
     color: "#fbca04"
-    description: Normal priority
+    description: Normal priority - planned for future release
 
   - name: "priority: low"
     color: "#0e8a16"
-    description: Nice to have, not urgent
+    description: Nice to have - backlog item
 
   # Status
   - name: blocked
@@ -52,7 +52,7 @@ labels:
 
   - name: "needs review"
     color: "#7057ff"
-    description: Ready for review
+    description: Ready for code review
 
   - name: wip
     color: "#fef2c0"
@@ -60,75 +60,79 @@ labels:
 
   - name: wontfix
     color: "#ffffff"
-    description: This will not be worked on
+    description: Will not be implemented (closed as intended)
 
   - name: duplicate
     color: "#cfd3d7"
-    description: This issue or pull request already exists
+    description: Duplicate of existing issue or PR
 
   - name: invalid
     color: "#cfd3d7"
-    description: This doesn't seem right
+    description: Not a valid issue or doesn't apply
 
   # Components
   - name: "area: cli"
     color: "#1d76db"
-    description: Related to CLI interface
+    description: Command-line arguments, subcommands, output formats
 
   - name: "area: tui"
     color: "#1d76db"
-    description: Related to TUI interface
+    description: Terminal UI, keybindings, widgets, screens
 
   - name: "area: core"
     color: "#1d76db"
-    description: Related to core business logic
+    description: Process filtering, memory tracking, kill logic
 
   - name: "area: tests"
     color: "#1d76db"
-    description: Related to testing
+    description: Unit tests, integration tests, test coverage
 
   - name: "area: ci/cd"
     color: "#1d76db"
-    description: Related to CI/CD workflows
+    description: GitHub Actions, build pipelines, releases
 
   - name: "area: rust"
     color: "#1d76db"
-    description: Related to Rust implementation
+    description: Rust code, Cargo dependencies, performance
 
   - name: "area: python"
     color: "#1d76db"
-    description: Related to Python bindings
+    description: PyO3 bindings, Python API, type stubs
 
   - name: "area: pypi"
     color: "#1d76db"
-    description: Related to PyPI packaging
+    description: Maturin builds, wheel packaging, PyPI releases
+
+  - name: "area: formatters"
+    color: "#1d76db"
+    description: Table, JSON, CSV, markdown output formatting
 
   # Community
   - name: "good first issue"
     color: "#7057ff"
-    description: Good for newcomers
+    description: Beginner-friendly - great for first-time contributors
 
   - name: "help wanted"
     color: "#008672"
-    description: Extra attention is needed
+    description: Community help needed - extra eyes appreciated
 
   # Dependencies
   - name: dependencies
     color: "#0366d6"
-    description: Pull requests that update a dependency file
+    description: Cargo.toml or pyproject.toml dependency updates
 
   - name: security
     color: "#ee0701"
-    description: Security-related issues or fixes
+    description: Security vulnerability or hardening
 
   # Maintenance
   - name: chore
     color: "#fef2c0"
-    description: Maintenance tasks and housekeeping
+    description: Tooling, configs, housekeeping, version bumps
 
   - name: performance
     color: "#5319e7"
-    description: Performance improvements
+    description: Speed optimizations, memory reduction, benchmarks
 
 # Labels to delete (if they exist)
 delete:

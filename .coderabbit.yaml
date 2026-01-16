@@ -2,8 +2,9 @@
 ---
 language: en-US
 tone_instructions: >-
-  Be direct, precise, and thorough. Focus on correctness, security, and
-  maintainability. Acknowledge good practices briefly.
+  Be concise, technical, and focus on Rust best practices. Highlight performance
+  implications, memory safety, and cross-platform compatibility. Acknowledge good
+  patterns briefly.
 early_access: true
 enable_free_tier: true
 
@@ -26,63 +27,71 @@ reviews:
   labeling_instructions:
     # Issue Types
     - label: bug
-      instructions: Something isn't working
+      instructions: Something isn't working as expected
     - label: feature
-      instructions: New feature or request
+      instructions: New feature or enhancement request
     - label: documentation
-      instructions: Improvements or additions to documentation
+      instructions: Docs improvements, typos, examples, guides
     - label: question
-      instructions: Further information is requested
+      instructions: Clarification needed on behavior or usage
     - label: refactor
-      instructions: Code refactoring without behavior change
+      instructions: Code improvements without changing functionality
     # Priority
     - label: "priority: critical"
-      instructions: Requires immediate attention
+      instructions: Urgent - breaks core functionality or security
     - label: "priority: high"
-      instructions: Should be addressed soon
+      instructions: Important - should be addressed in next release
     - label: "priority: medium"
-      instructions: Normal priority
+      instructions: Normal priority - planned for future release
     - label: "priority: low"
-      instructions: Nice to have, not urgent
+      instructions: Nice to have - backlog item
     # Status
     - label: blocked
       instructions: Waiting on external dependency or decision
     - label: "needs review"
-      instructions: Ready for review
+      instructions: Ready for code review
     - label: wip
       instructions: Work in progress, not ready for review
     - label: wontfix
-      instructions: This will not be worked on
+      instructions: Will not be implemented (closed as intended)
     - label: duplicate
-      instructions: This issue or pull request already exists
+      instructions: Duplicate of existing issue or PR
     - label: invalid
-      instructions: This doesn't seem right
+      instructions: Not a valid issue or doesn't apply
     # Components
     - label: "area: cli"
-      instructions: Related to CLI interface
+      instructions: Command-line arguments, subcommands, output formats
     - label: "area: tui"
-      instructions: Related to TUI interface
+      instructions: Terminal UI, keybindings, widgets, screens
     - label: "area: core"
-      instructions: Related to core business logic
+      instructions: Process filtering, memory tracking, kill logic
     - label: "area: tests"
-      instructions: Related to testing
+      instructions: Unit tests, integration tests, test coverage
     - label: "area: ci/cd"
-      instructions: Related to CI/CD workflows
+      instructions: GitHub Actions, build pipelines, releases
+    - label: "area: rust"
+      instructions: Rust code, Cargo dependencies, performance
+    - label: "area: python"
+      instructions: PyO3 bindings, Python API, type stubs
+    - label: "area: pypi"
+      instructions: Maturin builds, wheel packaging, PyPI releases
+    - label: "area: formatters"
+      instructions: Table, JSON, CSV, markdown output formatting
     # Community
     - label: "good first issue"
-      instructions: Good for newcomers
+      instructions: Beginner-friendly - great for first-time contributors
     - label: "help wanted"
-      instructions: Extra attention is needed
+      instructions: Community help needed - extra eyes appreciated
     # Dependencies
     - label: dependencies
-      instructions: Pull requests that update a dependency file
+      instructions: Cargo.toml or pyproject.toml dependency updates
     - label: security
-      instructions: Security-related issues or fixes
+      instructions: Security vulnerability or hardening
     # Maintenance
     - label: chore
-      instructions: Maintenance tasks and housekeeping
+      instructions: Tooling, configs, housekeeping, version bumps
     - label: performance
-      instructions: Performance improvements
+      instructions: Speed optimizations, memory reduction, benchmarks
   suggested_reviewers: true
   auto_assign_reviewers: true
   # Disable decorative features for cleaner reviews
@@ -93,31 +102,125 @@ reviews:
 
   path_filters:
     # Exclude generated/vendored content
+    - "!target/**"
     - "!dist/**"
     - "!*.lock"
+    - "!Cargo.lock"
     - "!uv.lock"
+    - "!**/__pycache__/**"
+    - "!**/*.pyc"
     - "!docs/cli.md"
     - "!docs/assets/screenshots/**"
 
   path_instructions:
-    - path: "src/**/*.py"
+    - path: "src/**/*.rs"
       instructions: |
-        Python 3.14+ codebase using modern type syntax (list[X], X | None).
-        Uses ruff for linting/formatting, ty for type checking.
-        Prefer dataclasses over dicts. Catch specific exceptions.
-        Check for OWASP top 10 vulnerabilities.
-    - path: "tests/**/*.py"
+        Procclean 3.0 Rust codebase. Focus on:
+        - Rust idioms: ownership, borrowing, pattern matching
+        - Avoid unnecessary clones/allocations (especially in hot paths)
+        - Use iterators over manual loops where appropriate
+        - Proper error handling with Result/Option (no unwrap in production)
+        - Check for unsafe code that could be safe
+        - Performance implications (this is a system utility)
+        - Async/await correctness with tokio
+        - Platform compatibility (Linux-specific code is OK, document it)
+
+    - path: "src/core/**/*.rs"
       instructions: |
-        Tests use pytest. Check for proper assertions, edge cases,
-        and that tests actually verify the behavior described.
-    - path: "*.md"
+        Core business logic: process filtering, memory tracking, kill operations.
+        - Performance critical - suggest optimizations
+        - sysinfo API usage correctness
+        - All error cases must be handled gracefully
+        - No panics in production code paths
+
+    - path: "src/tui/**/*.rs"
       instructions: |
-        Documentation follows standard markdown. Verify links work
-        and content is accurate and up-to-date.
-    - path: ".github/**/*.yml"
+        Ratatui terminal UI code.
+        - Proper event loop and state management
+        - No blocking operations in render path
+        - Keyboard shortcuts must match docs/tui.md
+        - Race conditions in background tasks (auto-refresh)
+        - Proper cleanup on exit
+
+    - path: "src/cli/**/*.rs"
       instructions: |
-        GitHub Actions workflows. Check for security issues like
-        command injection, missing permissions, and pinned actions.
+        Clap CLI interface.
+        - Help text clarity and consistency
+        - Subcommand behavior matches docs/cli.md
+        - Output format correctness (JSON, CSV, markdown)
+        - Error messages are user-friendly
+
+    - path: "src/formatters/**/*.rs"
+      instructions: |
+        Output formatting for multiple formats.
+        - Table rendering correctness
+        - JSON serialization (serde)
+        - CSV escaping and quoting
+        - Markdown table formatting
+
+    - path: "src/python.rs"
+      instructions: |
+        PyO3 Python bindings.
+        - Error conversion Rust -> Python exceptions
+        - GIL handling correctness
+        - Python API matches python/procclean/__init__.pyi
+        - Signature annotations match pyi file
+        - Type conversions are correct
+
+    - path: "python/**/*.py"
+      instructions: |
+        Python wrapper and type stubs.
+        - CLI wrapper finds Rust binary (dev vs installed)
+        - Type hints complete and accurate
+        - Imports work as documented
+        - __version__ matches Cargo.toml
+
+    - path: "python/**/*.pyi"
+      instructions: |
+        Python type stubs for IDE support.
+        - Match actual Rust bindings in src/python.rs
+        - Complete function signatures
+        - Proper type annotations
+
+    - path: "Cargo.toml"
+      instructions: |
+        Rust dependencies and configuration.
+        - Version updates and compatibility
+        - Feature flag configuration (python feature)
+        - Release profile optimizations
+        - Dependency conflicts or duplicates
+
+    - path: "pyproject.toml"
+      instructions: |
+        Maturin build and PyPI metadata.
+        - Version sync with Cargo.toml
+        - Python version requirements
+        - Maturin configuration correctness
+        - Classifiers accuracy
+
+    - path: ".github/workflows/**/*.yml"
+      instructions: |
+        CI/CD workflows for dual distribution.
+        - Rust toolchain setup
+        - Cargo caching configuration
+        - Maturin wheel builds (multi-platform)
+        - Dual publishing: PyPI + Crates.io
+        - Security: pinned actions, minimal permissions
+
+    - path: "docs/**/*.md"
+      instructions: |
+        Documentation for version 3.0.
+        - Examples tested and correct
+        - Installation instructions work
+        - CLI/TUI docs match actual behavior
+        - Migration guide from 2.x accurate
+
+    - path: "tests/**/*"
+      instructions: |
+        Rust unit and integration tests.
+        - Test edge cases and error conditions
+        - No test code in production paths
+        - Proper assertions (not just unwrap)
 
   auto_review:
     enabled: true
@@ -147,16 +250,13 @@ reviews:
       mode: warning
 
   tools:
-    # === Python tools (this is a Python project) ===
+    # === Rust tools ===
+    clippy:
+      enabled: true
+    # === Python tools (for wrapper) ===
     ruff:
       enabled: true
-    # Disable redundant Python linters - ruff covers these
-    flake8:
-      enabled: false
-    pylint:
-      enabled: false
-
-    # === Shell/YAML/Markdown (used in this project) ===
+    # === Shell/YAML/Markdown ===
     shellcheck:
       enabled: true
     yamllint:
@@ -165,7 +265,6 @@ reviews:
       enabled: true
     actionlint:
       enabled: true
-
     # === Security scanning ===
     gitleaks:
       enabled: true
@@ -173,7 +272,6 @@ reviews:
       enabled: true
     checkov:
       enabled: true
-
     # === General tools ===
     github-checks:
       enabled: true
@@ -185,14 +283,14 @@ reviews:
       enabled: true
     osvScanner:
       enabled: true
-
     # === AST pattern matching ===
     ast-grep:
       essential_rules: true
+    # === Disabled (not applicable) ===
     biome:
       enabled: false
     hadolint:
-      enabled: false # No Dockerfiles
+      enabled: false
     swiftlint:
       enabled: false
     phpstan:
@@ -223,8 +321,6 @@ reviews:
       enabled: false
     circleci:
       enabled: false
-    clippy:
-      enabled: false
     sqlfluff:
       enabled: false
     prismaLint:
@@ -241,9 +337,13 @@ reviews:
       enabled: false
     checkmake:
       enabled: false
+    flake8:
+      enabled: false
+    pylint:
+      enabled: false
 
 chat:
-  art: false # Disable ASCII/emoji art for cleaner responses
+  art: false
   auto_reply: true
   integrations:
     jira:
@@ -274,7 +374,8 @@ code_generation:
     language: en-US
   unit_tests:
     path_instructions:
-      - path: "src/**/*.py"
+      - path: "src/**/*.rs"
         instructions: |
-          Generate pytest tests. Use fixtures where appropriate.
-          Test edge cases and error conditions.
+          Generate Rust unit tests using #[cfg(test)] modules.
+          Test edge cases, error conditions, and boundary values.
+          Use assert!, assert_eq!, and Result<(), Box<dyn Error>>.
