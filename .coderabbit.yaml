@@ -11,7 +11,7 @@ reviews:
   profile: assertive
   request_changes_workflow: false
   high_level_summary: true
-  high_level_summary_placeholder: '@coderabbitai summary'
+  high_level_summary_placeholder: "@coderabbitai summary"
   review_status: false
   commit_status: true
   collapse_walkthrough: false
@@ -23,6 +23,12 @@ reviews:
   related_prs: true
   suggested_labels: true
   auto_apply_labels: true
+  labeling_instructions: [
+    {
+      "label": "none",
+      "instructions": "See .github/labels.yml for label definitions.",
+    },
+  ]
   suggested_reviewers: true
   auto_assign_reviewers: true
   # Disable decorative features for cleaner reviews
@@ -33,26 +39,28 @@ reviews:
 
   path_filters:
     # Exclude generated/vendored content
-    - '!dist/**'
-    - '!*.lock'
-    - '!uv.lock'
+    - "!dist/**"
+    - "!*.lock"
+    - "!uv.lock"
+    - "!docs/cli.md"
+    - "!docs/assets/screenshots/**"
 
   path_instructions:
-    - path: 'src/**/*.py'
+    - path: "src/**/*.py"
       instructions: |
         Python 3.14+ codebase using modern type syntax (list[X], X | None).
         Uses ruff for linting/formatting, ty for type checking.
         Prefer dataclasses over dicts. Catch specific exceptions.
         Check for OWASP top 10 vulnerabilities.
-    - path: 'tests/**/*.py'
+    - path: "tests/**/*.py"
       instructions: |
         Tests use pytest. Check for proper assertions, edge cases,
         and that tests actually verify the behavior described.
-    - path: '*.md'
+    - path: "*.md"
       instructions: |
         Documentation follows standard markdown. Verify links work
         and content is accurate and up-to-date.
-    - path: '.github/**/*.yml'
+    - path: ".github/**/*.yml"
       instructions: |
         GitHub Actions workflows. Check for security issues like
         command injection, missing permissions, and pinned actions.
@@ -61,6 +69,8 @@ reviews:
     enabled: true
     auto_incremental_review: true
     drafts: false
+    labels:
+      - "!wip"
     ignore_title_keywords:
       - WIP
       - DO NOT MERGE
@@ -128,7 +138,7 @@ reviews:
     biome:
       enabled: false
     hadolint:
-      enabled: false  # No Dockerfiles
+      enabled: false # No Dockerfiles
     swiftlint:
       enabled: false
     phpstan:
@@ -179,7 +189,7 @@ reviews:
       enabled: false
 
 chat:
-  art: false  # Disable ASCII/emoji art for cleaner responses
+  art: false # Disable ASCII/emoji art for cleaner responses
   auto_reply: true
   integrations:
     jira:
@@ -194,9 +204,9 @@ knowledge_base:
   code_guidelines:
     enabled: true
     filePatterns:
-      - '**/AGENT.md'
-      - '**/AGENTS.md'
-      - '**/CLAUDE.md'
+      - "**/AGENT.md"
+      - "**/AGENTS.md"
+      - "**/CLAUDE.md"
       - .github/copilot-instructions.md
   learnings:
     scope: auto
@@ -210,7 +220,7 @@ code_generation:
     language: en-US
   unit_tests:
     path_instructions:
-      - path: 'src/**/*.py'
+      - path: "src/**/*.py"
         instructions: |
           Generate pytest tests. Use fixtures where appropriate.
           Test edge cases and error conditions.
