@@ -23,12 +23,66 @@ reviews:
   related_prs: true
   suggested_labels: true
   auto_apply_labels: true
-  labeling_instructions: [
-    {
-      "label": "none",
-      "instructions": "See .github/labels.yml for label definitions.",
-    },
-  ]
+  labeling_instructions:
+    # Issue Types
+    - label: bug
+      instructions: Something isn't working
+    - label: feature
+      instructions: New feature or request
+    - label: documentation
+      instructions: Improvements or additions to documentation
+    - label: question
+      instructions: Further information is requested
+    - label: refactor
+      instructions: Code refactoring without behavior change
+    # Priority
+    - label: "priority: critical"
+      instructions: Requires immediate attention
+    - label: "priority: high"
+      instructions: Should be addressed soon
+    - label: "priority: medium"
+      instructions: Normal priority
+    - label: "priority: low"
+      instructions: Nice to have, not urgent
+    # Status
+    - label: blocked
+      instructions: Waiting on external dependency or decision
+    - label: "needs review"
+      instructions: Ready for review
+    - label: wip
+      instructions: Work in progress, not ready for review
+    - label: wontfix
+      instructions: This will not be worked on
+    - label: duplicate
+      instructions: This issue or pull request already exists
+    - label: invalid
+      instructions: This doesn't seem right
+    # Components
+    - label: "area: cli"
+      instructions: Related to CLI interface
+    - label: "area: tui"
+      instructions: Related to TUI interface
+    - label: "area: core"
+      instructions: Related to core business logic
+    - label: "area: tests"
+      instructions: Related to testing
+    - label: "area: ci/cd"
+      instructions: Related to CI/CD workflows
+    # Community
+    - label: "good first issue"
+      instructions: Good for newcomers
+    - label: "help wanted"
+      instructions: Extra attention is needed
+    # Dependencies
+    - label: dependencies
+      instructions: Pull requests that update a dependency file
+    - label: security
+      instructions: Security-related issues or fixes
+    # Maintenance
+    - label: chore
+      instructions: Maintenance tasks and housekeeping
+    - label: performance
+      instructions: Performance improvements
   suggested_reviewers: true
   auto_assign_reviewers: true
   # Disable decorative features for cleaner reviews
