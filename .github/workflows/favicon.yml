@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   update-favicon:
@@ -41,11 +42,17 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Commit and push
+      - name: Create Pull Request
         if: steps.check.outputs.changed == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/assets/images/favicon.ico docs/favicon.ico
-          git commit -m "chore: regenerate favicon.ico from updated icon.svg"
-          git push
+        uses: peter-evans/create-pull-request@v8
+        with:
+          add-paths: |
+            docs/assets/images/favicon.ico
+            docs/favicon.ico
+          commit-message: "chore: regenerate favicon.ico from updated icon.svg"
+          branch: chore/update-favicon
+          delete-branch: true
+          sign-commits: true
+          title: "chore: regenerate favicon.ico"
+          body: "Auto-generated favicon.ico from `logo/icon.svg` changes."
+          labels: "chore, area: ci/cd"
