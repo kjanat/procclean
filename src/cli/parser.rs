@@ -2,7 +2,7 @@ use clap::{Args, Parser, Subcommand};
 
 #[derive(Parser, Debug)]
 #[command(name = "procclean")]
-#[command(version = "2.0.0")]
+#[command(version = "3.0.0")]
 #[command(about = "A fast, interactive process cleaner", long_about = None)]
 pub struct Cli {
     #[command(subcommand)]

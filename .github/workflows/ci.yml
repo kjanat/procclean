@@ -9,13 +9,44 @@ on:
     branches: [master]
 
 jobs:
-  test:
+  rust-test:
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check formatting
+        run: cargo fmt -- --check
+
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Build Rust binary
+        run: cargo build --release
+
+      - name: Run Rust tests
+        run: cargo test
+
+  python-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -24,16 +55,14 @@ jobs:
       - name: Set up Python
         run: uv python install
 
-      - name: Install dependencies
-        run: uv sync
+      - name: Install maturin
+        run: pip install maturin
 
-      - name: Run linting
-        run: |
-          uv run ruff check src/
-          uv run ruff format --check src/
+      - name: Build Python package with Rust extension
+        run: maturin build --release
 
-      - name: Run type checking
-        run: uv run ty check
+      - name: Install built package
+        run: pip install target/wheels/*.whl
 
-      - name: Run tests
-        run: uv run pytest --cov -v
+      - name: Test Python imports
+        run: python -c "import procclean; print(procclean.__version__); print(procclean.get_memory())"

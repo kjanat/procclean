@@ -91,6 +91,18 @@ labels:
     color: "#1d76db"
     description: Related to CI/CD workflows
 
+  - name: "area: rust"
+    color: "#1d76db"
+    description: Related to Rust implementation
+
+  - name: "area: python"
+    color: "#1d76db"
+    description: Related to Python bindings
+
+  - name: "area: pypi"
+    color: "#1d76db"
+    description: Related to PyPI packaging
+
   # Community
   - name: "good first issue"
     color: "#7057ff"

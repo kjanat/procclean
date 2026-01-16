@@ -6,7 +6,7 @@ The core functionality is implemented in Rust for performance,
 with Python bindings provided via PyO3.
 """
 
-__version__ = "2.0.0"
+__version__ = "3.0.0"
 
 # Import Rust bindings
 try:

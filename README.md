@@ -152,7 +152,7 @@ procclean mem -f json               # Memory as JSON
 
 ## Architecture
 
-Procclean 2.0 is written in Rust with Python bindings for PyPI distribution:
+Procclean 3.0 is written in Rust with Python bindings for PyPI distribution:
 
 **Rust Core:**
 - **sysinfo** - Cross-platform system information

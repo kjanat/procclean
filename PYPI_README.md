@@ -4,7 +4,7 @@
   <em>Interactive TUI for exploring and cleaning up processes - find orphans, memory hogs, and kill them.</em>
 </p>
 
-**Version 2.0** is a complete rewrite in Rust for maximum performance, with Python bindings for seamless PyPI distribution.
+**Version 3.0** is a complete rewrite in Rust for maximum performance, with Python bindings for seamless PyPI distribution.
 
 ## Features
 
