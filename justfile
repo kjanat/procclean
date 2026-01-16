@@ -8,9 +8,7 @@ set quiet
 default:
     @just --list --unsorted
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Development
-# ─────────────────────────────────────────────────────────────────────────────
 
 # Session setup: sync deps and install pre-commit hooks
 [group('dev')]
@@ -28,9 +26,7 @@ run:
 cli *ARGS:
     uv run procclean {{ ARGS }}
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Quality Checks
-# ─────────────────────────────────────────────────────────────────────────────
 
 # Run all checks (lint + type + test)
 [group('quality')]
@@ -78,9 +74,7 @@ test-one PATTERN:
 hooks:
     uv run pre-commit run --all-files
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Build & Release
-# ─────────────────────────────────────────────────────────────────────────────
 
 # Build the package
 [group('release')]
@@ -112,9 +106,7 @@ bump-major:
 tag VERSION MESSAGE:
     git tag -s v{{ VERSION }} -m "v{{ VERSION }} - {{ MESSAGE }}"
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Documentation
-# ─────────────────────────────────────────────────────────────────────────────
 
 # Serve docs locally with live reload
 [group('docs')]
@@ -136,9 +128,7 @@ gen-cli-docs:
 gen-screenshots:
     uv run scripts/generate_screenshots.py
 
-# ─────────────────────────────────────────────────────────────────────────────
 # TUI Development
-# ─────────────────────────────────────────────────────────────────────────────
 
 # Run TUI with Textual dev console
 [group('dev')]
@@ -150,9 +140,7 @@ tui-dev:
 tui-console:
     uv run textual console
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Utilities
-# ─────────────────────────────────────────────────────────────────────────────
 
 # Remove build artifacts and caches
 [group('util')]
