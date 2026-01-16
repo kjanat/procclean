@@ -119,12 +119,12 @@ tag VERSION MESSAGE:
 # Serve docs locally with live reload
 [group('docs')]
 docs:
-    uv run mkdocs serve
+    uv run mkdocs serve --config-file site/mkdocs.yml
 
 # Build static docs
 [group('docs')]
 docs-build:
-    uv run mkdocs build
+    uv run mkdocs build --config-file site/mkdocs.yml
 
 # Regenerate CLI docs (docs/cli.md)
 [group('docs')]
