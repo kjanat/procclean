@@ -7,19 +7,17 @@
 </p>
 
 <p align="center">
-  <a href="https://pypi.org/project/procclean/"><img src="https://img.shields.io/pypi/v/procclean" alt="PyPI"></a>
-  <a href="https://pypi.org/project/procclean/"><img src="https://img.shields.io/pypi/dm/procclean" alt="Downloads"></a>
+  <a href="https://crates.io/crates/procclean"><img src="https://img.shields.io/crates/v/procclean" alt="Crates.io"></a>
   <a href="https://github.com/kjanat/procclean/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/kjanat/procclean/ci.yml?branch=master" alt="CI"></a>
   <a href="https://github.com/kjanat/procclean/blob/master/LICENSE"><img src="https://img.shields.io/github/license/kjanat/procclean" alt="License"></a>
-  <a href="https://procclean.kjanat.com"><img src="https://img.shields.io/badge/docs-mkdocs-blue" alt="Docs"></a>
-  <img src="https://img.shields.io/badge/python-3.14%2B-blue" alt="Python 3.14+">
+  <img src="https://img.shields.io/badge/rust-1.70%2B-orange" alt="Rust 1.70+">
   <img src="https://img.shields.io/badge/platform-linux-lightgrey" alt="Linux">
 </p>
 
 ## Features
 
 - **Memory overview** - Real-time total/used/free/swap display
-- **Multiple views** - All, Orphaned, Killable, Process Groups, High Memory
+- **Multiple views** - All, Orphaned, Killable, High Memory
 - **Orphan detection** - Finds processes whose parent died (PPID=1)
 - **Killable detection** - Orphans safe to kill (not tmux, not system services)
 - **Stale detection** - Flags processes with deleted executables
@@ -30,32 +28,27 @@
 - **Configurable thresholds** - Adjust memory filters via CLI flags
 - **Preview mode** - Dry-run for kill operations with formatting options
 - **CLI mode** - Scriptable commands with JSON/CSV/Markdown output
-- **Clickable TUI** - Click headers to sort, rows to select
+- **Fast & Lightweight** - Written in Rust for maximum performance
 
 ## Installation
 
+### From Source
+
 ```bash
-pip install procclean
+cargo install --path .
 ```
 
-Or with [uv](https://docs.astral.sh/uv/) (recommended):
+Or build manually:
 
 ```bash
-uv tool install procclean
+cargo build --release
+sudo cp target/release/procclean /usr/local/bin/
 ```
 
-Or with [pipx](https://pipx.pypa.io/):
+### From Crates.io (coming soon)
 
 ```bash
-pipx install procclean
-```
-
-Run without installing:
-
-```bash
-uvx procclean
-# or
-pipx run procclean
+cargo install procclean
 ```
 
 ## Usage
@@ -71,7 +64,6 @@ procclean
 ```bash
 # List processes
 procclean list                      # List processes (table)
-procclean ls                        # Alias for 'list'
 procclean list -f json|csv|md       # Different output formats
 procclean list -s mem|cpu|pid|name|cwd  # Sort by field
 procclean list -a                   # Sort ascending (default: descending)
@@ -87,7 +79,6 @@ procclean list --high-memory-threshold 1000  # High-mem at 1000 MB
 
 # Process groups
 procclean groups                    # Show process groups
-procclean g                         # Alias for 'groups'
 procclean groups -f json            # Groups as JSON
 
 # Kill processes
@@ -100,9 +91,9 @@ procclean kill -k --dry-run         # Alias for --preview
 procclean kill -k --preview -O json # Preview in JSON format
 
 # Memory summary
-procclean mem                       # Show memory summary
-procclean memory                    # Full name for 'mem'
-procclean mem -f json               # Memory info as JSON
+procclean memory                    # Show memory summary
+procclean mem                       # Alias for 'memory'
+procclean mem -f json               # Memory as JSON
 ```
 
 ## TUI Keybindings
@@ -116,10 +107,10 @@ procclean mem -f json               # Memory info as JSON
 | `o`     | Show orphans            |
 | `O`     | Show killable           |
 | `a`     | Show all                |
-| `g`     | Show groups             |
+| `m`     | Show high memory        |
 | `w`     | Filter by selected cwd  |
 | `W`     | Clear cwd filter        |
-| `Space` | Toggle selection        |
+| `space` | Toggle selection        |
 | `s`     | Select all visible      |
 | `c`     | Clear selection         |
 | `1`     | Sort by memory          |
@@ -129,70 +120,39 @@ procclean mem -f json               # Memory info as JSON
 | `5`     | Sort by cwd             |
 | `!`     | Reverse sort order      |
 
-Click column headers to sort, click rows to toggle selection.
+## Architecture
 
-## Views
+Procclean is built with:
 
-- **All Processes** - All user processes sorted by memory usage
-- **Orphaned** - Processes with PPID=1 (parent died)
-- **Killable** - Orphans safe to kill (not in tmux, not system services)
-- **Process Groups** - Similar processes grouped together
-- **High Memory** - Processes using >500MB RAM (configurable)
-
-## Output Formats
-
-CLI supports multiple output formats via `-f`:
-
-- `table` - Human-readable table (default)
-- `json` - JSON array for scripting
-- `csv` - CSV for spreadsheets
-- `md` - Markdown table
-
-## Custom Columns
-
-Use `-c` to specify which columns to display:
-
-```bash
-procclean list -c pid,name,rss_mb,cwd
-```
-
-Available columns: `pid`, `name`, `rss_mb`, `cpu_percent`, `cwd`, `ppid`,
-`parent_name`, `status`, `cmdline`, `username`
-
-## Requirements
-
-- Python 3.14+
-- Linux (uses `/proc` filesystem)
+- **sysinfo** - Cross-platform system information
+- **ratatui** - Terminal UI framework
+- **clap** - CLI argument parsing
+- **tokio** - Async runtime
+- **serde** - Serialization
 
 ## Development
 
 ```bash
-git clone https://github.com/kjanat/procclean
-cd procclean
-uv sync
-uv run pre-commit install --install-hooks
-```
+# Build
+cargo build
 
-Run tests:
+# Run tests
+cargo test
 
-```bash
-uv run pytest                    # All tests
-uv run pytest --cov -vv          # With coverage
-```
+# Run with debug output
+RUST_LOG=debug cargo run
 
-Lint and type check:
+# Format code
+cargo fmt
 
-```bash
-uv run ruff check src/
-uv run ty check
+# Lint
+cargo clippy
 ```
 
 ## License
 
-[MIT][license]
+MIT License - see [LICENSE](LICENSE) for details.
 
-<!--link definitions-->
+## Credits
 
-[license]: https://github.com/kjanat/procclean/blob/master/LICENSE "MIT License"
-
-<!--markdownlint-disable-file MD033 MD041-->
+Originally written in Python, rewritten in Rust for better performance and lower resource usage.

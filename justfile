@@ -10,150 +10,104 @@ default:
 
 # Development
 
-# Session setup: sync deps and install pre-commit hooks
+# Build the project
 [group('dev')]
-setup:
-    uv sync
-    uv run pre-commit install --install-hooks
+build:
+    cargo build
+
+# Build release version
+[group('dev')]
+build-release:
+    cargo build --release
 
 # Run the TUI app
 [group('dev')]
-run:
-    uv run procclean
+run *ARGS:
+    cargo run -- {{ ARGS }}
 
-# Run CLI with arguments
+# Run release version
 [group('dev')]
-cli *ARGS:
-    uv run procclean {{ ARGS }}
+run-release *ARGS:
+    cargo run --release -- {{ ARGS }}
 
 # Quality Checks
 
-# Run all checks (lint + type + test)
+# Run all checks (fmt + clippy + test)
 [group('quality')]
-check: lint type test
+check: fmt-check clippy test
 
-# Lint with ruff
+# Format code
 [group('quality')]
-lint:
-    uv run ruff check src/
-    uv run ruff format --check src/
+fmt:
+    cargo fmt
 
-# Auto-fix lint issues
+# Check formatting
 [group('quality')]
-fix:
-    uv run ruff check --fix src/
-    uv run ruff format src/
+fmt-check:
+    cargo fmt -- --check
 
-# Type check with ty
+# Lint with clippy
 [group('quality')]
-type:
-    uv run ty check
+clippy:
+    cargo clippy -- -D warnings
 
 # Run all tests
 [group('quality')]
 test:
-    uv run pytest
+    cargo test
 
 # Run tests with verbose output
 [group('quality')]
 test-v:
-    uv run pytest -vv
-
-# Run tests with coverage
-[group('quality')]
-test-cov:
-    uv run pytest --cov -vv
-
-# Run a single test file or pattern
-[group('quality')]
-test-one PATTERN:
-    uv run pytest {{ PATTERN }} -v
-
-# Run all pre-commit hooks
-[group('quality')]
-hooks:
-    uv run pre-commit run --all-files
+    cargo test -- --nocapture
 
 # Build & Release
 
-# Build the package
+# Install locally
 [group('release')]
-build:
-    uv build
+install:
+    cargo install --path .
 
 # Show current version
 [group('release')]
 version:
-    @uv version
-
-# Bump patch version (0.0.X)
-[group('release')]
-bump-patch:
-    uv version --bump patch
-
-# Bump minor version (0.X.0)
-[group('release')]
-bump-minor:
-    uv version --bump minor
-
-# Bump major version (X.0.0)
-[group('release')]
-bump-major:
-    uv version --bump major
+    @grep '^version' Cargo.toml | head -1
 
 # Create a signed release tag (NEVER delete tags, use -f to update)
 [group('release')]
 tag VERSION MESSAGE:
     git tag -s v{{ VERSION }} -m "v{{ VERSION }} - {{ MESSAGE }}"
 
-# Documentation
-
-# Serve docs locally with live reload
-[group('docs')]
-docs:
-    uv run mkdocs serve --config-file site/mkdocs.yml
-
-# Build static docs
-[group('docs')]
-docs-build:
-    uv run mkdocs build --config-file site/mkdocs.yml
-
-# Regenerate CLI docs (docs/cli.md)
-[group('docs')]
-gen-cli-docs:
-    uv run scripts/generate_cli_docs.py
-
-# Regenerate TUI screenshots
-[group('docs')]
-gen-screenshots:
-    uv run scripts/generate_screenshots.py
-
-# TUI Development
-
-# Run TUI with Textual dev console
-[group('dev')]
-tui-dev:
-    uv run textual run --dev src/procclean/tui/app.py:ProcessCleanerApp
-
-# Open Textual dev console (run in separate terminal)
-[group('dev')]
-tui-console:
-    uv run textual console
-
 # Utilities
 
 # Remove build artifacts and caches
 [group('util')]
 clean:
-    rm -rf dist/ build/ .pytest_cache/ .ruff_cache/ .mypy_cache/
-    find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-    find . -type f -name "*.pyc" -delete 2>/dev/null || true
+    cargo clean
+    rm -rf target/
 
 # Check for outdated dependencies
 [group('util')]
 outdated:
-    uv pip list --outdated
+    cargo outdated
 
-# Full CI check (mirrors GitHub Actions)
+# Update dependencies
+[group('util')]
+update:
+    cargo update
+
+# Full CI check
 [group('quality')]
-ci: hooks check
+ci: check
+
+# Python Legacy (for reference)
+
+# Run Python version (if needed for comparison)
+[group('legacy')]
+python-setup:
+    uv sync
+    uv run pre-commit install --install-hooks
+
+[group('legacy')]
+python-run:
+    uv run procclean
