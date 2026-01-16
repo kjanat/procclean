@@ -7,10 +7,6 @@
       ".zed/*.json",
     ],
   },
-  "markdown": {
-    "textWrap": "always",
-    "emphasisKind": "asterisks",
-  },
   "ruff": {
     "preview": true,
   },
@@ -20,6 +16,7 @@
   "yaml": {},
   "exec": {
     "cwd": "${configDir}",
+    "indentWidth": 4,
     "commands": [
       {
         /** Formats toml files */
@@ -32,6 +29,13 @@
         "exts": ["svg"],
         "stdin": false,
       },
+      {
+        "command": "prettier --stdin-filepath {{file_path}} --tab-width {{indent_width}} --print-width {{line_width}}",
+        // add more extensions that prettier should format
+        "exts": [
+          "md"
+        ],
+      }
     ],
   },
   "excludes": [
@@ -44,12 +48,11 @@
   ],
   "plugins": [
     "https://plugins.dprint.dev/json-0.21.1.wasm",
-    "https://plugins.dprint.dev/markdown-0.20.0.wasm",
-    "https://plugins.dprint.dev/ruff-0.6.11.wasm",
+    "https://plugins.dprint.dev/ruff-0.6.12.wasm",
     "https://plugins.dprint.dev/jupyter-0.2.1.wasm",
-    "https://plugins.dprint.dev/g-plane/malva-v0.15.1.wasm",
+    "https://plugins.dprint.dev/g-plane/malva-v0.15.2.wasm",
     "https://plugins.dprint.dev/g-plane/markup_fmt-v0.25.3.wasm",
-    "https://plugins.dprint.dev/g-plane/pretty_yaml-v0.5.1.wasm",
+    "https://plugins.dprint.dev/g-plane/pretty_yaml-v0.6.0.wasm",
     "https://plugins.dprint.dev/exec-0.6.0.json@a054130d458f124f9b5c91484833828950723a5af3f8ff2bd1523bd47b83b364",
   ],
 }

@@ -69,6 +69,21 @@ def filter_high_memory(
     return [p for p in procs if p.rss_mb > threshold_mb]
 
 
+def filter_stale(procs: list[ProcessInfo]) -> list[ProcessInfo]:
+    """Filter to processes with deleted/updated executables.
+
+    These are processes running outdated binaries after a package update.
+    Common on rolling release distros (Arch, Manjaro) after system updates.
+
+    Args:
+        procs: List of processes to filter.
+
+    Returns:
+        Processes whose executable has been deleted or replaced.
+    """
+    return [p for p in procs if p.exe_deleted]
+
+
 def filter_by_cwd(procs: list[ProcessInfo], cwd_path: str) -> list[ProcessInfo]:
     """Filter processes by current working directory.
 

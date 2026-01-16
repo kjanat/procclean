@@ -44,30 +44,30 @@ procclean mem -f json           # JSON output
 
 - :material-clock-fast:{ .lg .middle } **Output Formats**
 
-  ---
+    ***
 
-  The `-f` flag supports:
+    The `-f` flag supports:
 
-  | Format  | Description                    |
-  | ------- | ------------------------------ |
-  | `table` | Human-readable table (default) |
-  | `json`  | JSON array for scripting       |
-  | `csv`   | CSV for spreadsheets           |
-  | `md`    | Markdown table                 |
+    | Format  | Description                    |
+    | ------- | ------------------------------ |
+    | `table` | Human-readable table (default) |
+    | `json`  | JSON array for scripting       |
+    | `csv`   | CSV for spreadsheets           |
+    | `md`    | Markdown table                 |
 
 - :fontawesome-brands-markdown:{ .lg .middle } **Sort Options**
 
-  ---
+    ***
 
-  The `-s` flag supports:
+    The `-s` flag supports:
 
-  | Field  | Description       |
-  | ------ | ----------------- |
-  | `mem`  | Memory usage      |
-  | `cpu`  | CPU usage         |
-  | `pid`  | Process ID        |
-  | `name` | Process name      |
-  | `cwd`  | Working directory |
+    | Field  | Description       |
+    | ------ | ----------------- |
+    | `mem`  | Memory usage      |
+    | `cpu`  | CPU usage         |
+    | `pid`  | Process ID        |
+    | `name` | Process name      |
+    | `cwd`  | Working directory |
 
 </div>
 

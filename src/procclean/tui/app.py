@@ -231,7 +231,8 @@ class ProcessCleanerApp(App):
             selected = "[X]" if proc.pid in self.selected_pids else "[ ]"
             orphan_marker = " [orphan]" if proc.is_orphan else ""
             tmux_marker = " [tmux]" if proc.in_tmux else ""
-            status = f"{proc.status}{orphan_marker}{tmux_marker}"
+            stale_marker = " [stale]" if proc.exe_deleted else ""
+            status = f"{proc.status}{orphan_marker}{tmux_marker}{stale_marker}"
 
             cwd = proc.cwd or "?"
             if len(cwd) > CWD_MAX_WIDTH:

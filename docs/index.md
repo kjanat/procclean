@@ -1,7 +1,7 @@
 ---
 title: procclean
 hide:
-  - toc
+    - toc
 ---
 
 <figure markdown="span">
@@ -9,7 +9,7 @@ hide:
 </figure>
 
 Interactive TUI for exploring and cleaning up processes - find orphans, memory
-hogs, and kill them. :procclean-icon:
+hogs, and kill them.
 
 ## Features
 

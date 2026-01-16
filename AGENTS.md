@@ -1,5 +1,8 @@
 # AGENTS.md
 
+**Repository:**
+[github.com/kjanat/procclean](https://github.com/kjanat/procclean)
+
 ## Session Setup
 
 Run at the start of each session:
@@ -47,7 +50,7 @@ uv sync && uv run pre-commit install --install-hooks
 ## Code Review Guidelines
 
 **Verify before claiming.** Every assertion in a code review must be validated
-against authoritative sources (official docs, Context7, actual testing) *before*
+against authoritative sources (official docs, Context7, actual testing) _before_
 presenting to the user.
 
 **Know your tools.** Understand the technologies being reviewed:
@@ -59,7 +62,7 @@ presenting to the user.
 **Express uncertainty.** If unsure, say "I'm not certain about X, let me verify"
 instead of presenting speculation as fact.
 
-**Stop after correction.** When proven wrong on one claim, re-verify *all*
+**Stop after correction.** When proven wrong on one claim, re-verify _all_
 claims in the review before proceeding.
 
 **Don't "fix" working code.** Even if something looks wrong, verify it's
@@ -73,7 +76,7 @@ than a standalone heredoc. Understand the full context before judging.
 ## Code Style
 
 - Python 3.14+, use modern type syntax: `list[X]`, `dict[K,V]`, `X | None`
-  - Make sure to actually exploit new features. See [Python 3.14 whatsnew]
+    - Make sure to actually exploit new features. See [Python 3.14 whatsnew]
 - Imports: `stdlib` first, third-party, then relative (`.module`)
 - Format: `ruff` (88 char line length, double quotes)
 - `Dataclasses` for data structures, not `dicts`
