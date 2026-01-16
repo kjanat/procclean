@@ -15,12 +15,19 @@ from .filters import (
     filter_high_memory,
     filter_killable,
     filter_orphans,
+    filter_stale,
     is_system_service,
     sort_processes,
 )
 from .memory import get_memory_summary
 from .models import ProcessInfo
-from .process import find_similar_processes, get_cwd, get_process_list, get_tmux_env
+from .process import (
+    find_similar_processes,
+    get_cwd,
+    get_process_list,
+    get_tmux_env,
+    is_exe_deleted,
+)
 
 __all__ = [
     "CONFIRM_PREVIEW_LIMIT",
@@ -35,11 +42,13 @@ __all__ = [
     "filter_high_memory",
     "filter_killable",
     "filter_orphans",
+    "filter_stale",
     "find_similar_processes",
     "get_cwd",
     "get_memory_summary",
     "get_process_list",
     "get_tmux_env",
+    "is_exe_deleted",
     "is_system_service",
     "kill_process",
     "kill_processes",

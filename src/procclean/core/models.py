@@ -20,6 +20,7 @@ class ProcessInfo:
     is_orphan: bool
     in_tmux: bool
     status: str
+    exe_deleted: bool = False  # True if executable was deleted/updated
 
     @property
     def is_orphan_candidate(self) -> bool:

@@ -32,7 +32,7 @@ from procclean.core import (
 from .screens import ConfirmKillScreen
 
 # Type aliases
-ViewType = Literal["all", "orphans", "groups", "high-mem"]
+ViewType = Literal["all", "orphans", "stale", "groups", "high-mem"]
 SortKey = Literal["memory", "cpu", "pid", "name", "cwd"]
 
 
@@ -53,6 +53,7 @@ class ProcessCleanerApp(App):
         Binding("k", "kill_selected", "Kill"),
         Binding("K", "force_kill_selected", "Force Kill"),
         Binding("o", "show_orphans", "Orphans"),
+        Binding("t", "show_stale", "Stale"),
         Binding("a", "show_all", "All"),
         Binding("g", "show_groups", "Groups"),
         Binding("w", "filter_cwd", "Filter CWD"),
@@ -93,6 +94,7 @@ class ProcessCleanerApp(App):
                 yield OptionList(
                     Option("All Processes", id="view-all"),
                     Option("Orphaned", id="view-orphans"),
+                    Option("Stale (Updated)", id="view-stale"),
                     Option("Process Groups", id="view-groups"),
                     Option("High Memory (>500MB)", id="view-high-mem"),
                     id="view-selector",
@@ -184,6 +186,8 @@ class ProcessCleanerApp(App):
 
         if self.current_view == "orphans":
             procs = [p for p in self.processes if p.is_orphan]
+        elif self.current_view == "stale":
+            procs = [p for p in self.processes if p.exe_deleted]
         elif self.current_view == "high-mem":
             procs = [p for p in self.processes if p.rss_mb > HIGH_MEMORY_THRESHOLD_MB]
         elif self.current_view == "groups":
@@ -205,7 +209,8 @@ class ProcessCleanerApp(App):
             selected = "[X]" if proc.pid in self.selected_pids else "[ ]"
             orphan_marker = " [orphan]" if proc.is_orphan else ""
             tmux_marker = " [tmux]" if proc.in_tmux else ""
-            status = f"{proc.status}{orphan_marker}{tmux_marker}"
+            stale_marker = " [stale]" if proc.exe_deleted else ""
+            status = f"{proc.status}{orphan_marker}{tmux_marker}{stale_marker}"
 
             cwd = proc.cwd or "?"
             if len(cwd) > CWD_MAX_WIDTH:
@@ -240,6 +245,7 @@ class ProcessCleanerApp(App):
         view_map: dict[str, ViewType] = {
             "view-all": "all",
             "view-orphans": "orphans",
+            "view-stale": "stale",
             "view-groups": "groups",
             "view-high-mem": "high-mem",
         }
@@ -305,6 +311,10 @@ class ProcessCleanerApp(App):
     def action_show_orphans(self) -> None:
         """Switch to orphans view."""
         self.current_view = "orphans"
+
+    def action_show_stale(self) -> None:
+        """Switch to stale processes view (deleted/updated executables)."""
+        self.current_view = "stale"
 
     def action_show_all(self) -> None:
         """Switch to all processes view."""
