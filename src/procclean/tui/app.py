@@ -16,6 +16,7 @@ from textual.widgets import (
     OptionList,
     Static,
 )
+from textual.widgets.data_table import RowDoesNotExist
 from textual.widgets.option_list import Option
 
 from procclean.core import (
@@ -279,8 +280,12 @@ class ProcessCleanerApp(App):
     def on_row_clicked(self, event: DataTable.RowSelected) -> None:
         """Toggle selection when a row is clicked."""
         # Get PID from the row data (column 1 is PID)
-        row_data = event.data_table.get_row(event.row_key)
-        pid = int(row_data[1])
+        # Guard against race: auto-refresh can remove rows mid-flight
+        try:
+            row_data = event.data_table.get_row(event.row_key)
+            pid = int(row_data[1])
+        except RowDoesNotExist:
+            return
 
         # Toggle selection
         if pid in self.selected_pids:
@@ -300,7 +305,7 @@ class ProcessCleanerApp(App):
         """Sort by column when header is clicked."""
         # Map column index to sort key.
         # Sortable: PID(1), Name(2), RAM(3), CPU(4), CWD(5)
-        # Not sortable (no-op): Selection(0), Status(6) - clicking does nothing
+        # Not sortable (no-op): Selection(0), PPID(6), Parent(7), Status(8)
         # NOTE: Indexes must be updated if column order changes in update_table()
         column_sort_map: dict[int, SortKey] = {
             1: "pid",
