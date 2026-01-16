@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=https://www.schemastore.org/github-workflow.json
+---
+name: Update Favicon
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - logo/icon.svg
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-favicon:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install ImageMagick
+        run: sudo apt-get update && sudo apt-get install -y imagemagick
+
+      - name: Convert SVG to ICO
+        run: |
+          set -euo pipefail
+          mkdir -p docs/assets/images
+          convert -background none logo/icon.svg \
+            -define icon:auto-resize=256,128,64,48,32,16 \
+            docs/assets/images/favicon.ico
+          if [ ! -s docs/assets/images/favicon.ico ]; then
+            echo "::error file=docs/assets/images/favicon.ico::is empty."
+            exit 1
+          fi
+          cp docs/assets/images/favicon.ico docs/favicon.ico
+
+      - name: Check for changes
+        id: check
+        run: |
+          if git status --porcelain docs/assets/images/favicon.ico docs/favicon.ico | grep -q .; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create Pull Request
+        if: steps.check.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          add-paths: |
+            docs/assets/images/favicon.ico
+            docs/favicon.ico
+          commit-message: "chore: regenerate favicon.ico from updated icon.svg"
+          branch: chore/update-favicon
+          delete-branch: true
+          sign-commits: true
+          title: "chore: regenerate favicon.ico"
+          body: "Auto-generated favicon.ico from `logo/icon.svg` changes."
+          labels: "chore, area: ci/cd"

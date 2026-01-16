@@ -23,6 +23,12 @@ reviews:
   related_prs: true
   suggested_labels: true
   auto_apply_labels: true
+  labeling_instructions: [
+    {
+      "label": "none",
+      "instructions": "See .github/labels.yml for label definitions.",
+    },
+  ]
   suggested_reviewers: true
   auto_assign_reviewers: true
   # Disable decorative features for cleaner reviews
@@ -36,6 +42,8 @@ reviews:
     - "!dist/**"
     - "!*.lock"
     - "!uv.lock"
+    - "!docs/cli.md"
+    - "!docs/assets/screenshots/**"
 
   path_instructions:
     - path: "src/**/*.py"
@@ -61,6 +69,8 @@ reviews:
     enabled: true
     auto_incremental_review: true
     drafts: false
+    labels:
+      - "!wip"
     ignore_title_keywords:
       - WIP
       - DO NOT MERGE

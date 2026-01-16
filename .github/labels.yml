@@ -54,6 +54,10 @@ labels:
     color: "#7057ff"
     description: Ready for review
 
+  - name: wip
+    color: "#fef2c0"
+    description: Work in progress, not ready for review
+
   - name: wontfix
     color: "#ffffff"
     description: This will not be worked on
