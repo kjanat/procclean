@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=https://www.schemastore.org/github-workflow.json
+---
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with: { activate-environment: true }
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run linting
+        run: |
+          uv run ruff check src/
+          uv run ruff format --check src/
+
+      - name: Run type checking
+        run: uv run ty check
+
+      - name: Run tests
+        run: uv run pytest --cov -v
