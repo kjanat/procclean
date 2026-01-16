@@ -208,14 +208,13 @@ class ProcessCleanerApp(App):
         """
         if cursor_pid is None:
             return
-        for row_idx in range(table.row_count):
-            row_data = table.get_row_at(row_idx)
-            try:
-                if int(row_data[1]) == cursor_pid:
-                    table.move_cursor(row=row_idx)
-                    break
-            except (ValueError, IndexError):
-                continue
+        try:
+            row_idx = table.get_row_index(str(cursor_pid))
+        except RowDoesNotExist:
+            if table.row_count:
+                table.move_cursor(row=0)
+            return
+        table.move_cursor(row=row_idx)
 
     def update_table(self) -> None:
         """Update the process table based on current view and sort."""
