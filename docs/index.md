@@ -8,14 +8,12 @@ hide:
   <img src="assets/images/logo.svg" alt="procclean" class="hero-logo">
 </figure>
 
-Interactive TUI for exploring and cleaning up processes - find orphans, memory
-hogs, and kill them.
+Interactive TUI for exploring and cleaning up processes - find orphans, memory hogs, and kill them.
 
 ## Features
 
 - **Memory overview** - Real-time total/used/free/swap display
-- **Multiple views** - All processes, Orphaned, Process Groups, High Memory
-  (>500MB)
+- **Multiple views** - All processes, Orphaned, Process Groups, High Memory (>500MB)
 - **Orphan detection** - Finds processes whose parent died (PPID=1)
 - **Tmux awareness** - Won't flag tmux processes as orphan candidates
 - **Batch operations** - Select multiple processes and kill them at once
@@ -24,17 +22,33 @@ hogs, and kill them.
 
 ## Quick Start
 
+_Install via uv as a tool:_
+
 ```bash
 # Install
-uv tool install git+https://github.com/kjanat/procclean
+uv tool install procclean
+# or from source
+# uv tool install git+https://github.com/kjanat/procclean
+```
 
-# Or run directly
-uvx git+https://github.com/kjanat/procclean
+_Run without installation:_
 
-# Launch TUI
+```bash
+uvx procclean
+# or: uvx git+https://github.com/kjanat/procclean
+```
+
+### Usage examples
+
+_Launch TUI_
+
+```bash
 procclean
+```
 
-# CLI usage
+_CLI usage_
+
+```bash
 procclean list -o  # Show orphans
 procclean kill -k -y  # Kill all killable orphans
 ```

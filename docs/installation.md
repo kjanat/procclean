@@ -5,13 +5,14 @@
 Install as a tool:
 
 ```bash
-uv tool install git+https://github.com/kjanat/procclean
+uv tool install procclean
+# then run `procclean`
 ```
 
 Or run directly without installing:
 
 ```bash
-uvx git+https://github.com/kjanat/procclean
+uvx procclean
 ```
 
 ## From source
@@ -21,6 +22,7 @@ git clone https://github.com/kjanat/procclean
 cd procclean
 uv sync
 uv run procclean
+# or: uvx git+https://github.com/kjanat/procclean
 ```
 
 ## Requirements
