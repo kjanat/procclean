@@ -15,3 +15,24 @@ pub use formatters::{format_output, get_columns, get_default_columns, OutputForm
 pub use cli::{cmd_groups, cmd_kill, cmd_list, cmd_memory, Cli, Commands};
 
 pub use tui::App;
+
+// Python bindings
+#[cfg(feature = "python")]
+pub mod python;
+
+#[cfg(feature = "python")]
+use pyo3::prelude::*;
+
+/// Python module for procclean
+#[cfg(feature = "python")]
+#[pymodule]
+fn _procclean(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<python::PyProcessInfo>()?;
+    m.add_class::<python::PyMemorySummary>()?;
+    m.add_function(wrap_pyfunction!(python::get_processes, m)?)?;
+    m.add_function(wrap_pyfunction!(python::get_memory, m)?)?;
+    m.add_function(wrap_pyfunction!(python::kill_process_py, m)?)?;
+    m.add_function(wrap_pyfunction!(python::filter_orphans_py, m)?)?;
+    m.add_function(wrap_pyfunction!(python::filter_killable_py, m)?)?;
+    Ok(())
+}

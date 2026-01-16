@@ -32,7 +32,37 @@
 
 ## Installation
 
-### From Source
+### Option 1: Python (via PyPI)
+
+The easiest way to install procclean is via pip. The Python package includes pre-compiled Rust binaries:
+
+```bash
+pip install procclean
+```
+
+Or with [uv](https://docs.astral.sh/uv/) (recommended):
+
+```bash
+uv tool install procclean
+```
+
+Or with [pipx](https://pipx.pypa.io/):
+
+```bash
+pipx install procclean
+```
+
+Run without installing:
+
+```bash
+uvx procclean
+# or
+pipx run procclean
+```
+
+### Option 2: Rust (via Cargo)
+
+Install directly from source with Cargo:
 
 ```bash
 cargo install --path .
@@ -45,7 +75,7 @@ cargo build --release
 sudo cp target/release/procclean /usr/local/bin/
 ```
 
-### From Crates.io (coming soon)
+### Option 3: From Crates.io (coming soon)
 
 ```bash
 cargo install procclean
@@ -122,19 +152,26 @@ procclean mem -f json               # Memory as JSON
 
 ## Architecture
 
-Procclean is built with:
+Procclean 2.0 is written in Rust with Python bindings for PyPI distribution:
 
+**Rust Core:**
 - **sysinfo** - Cross-platform system information
 - **ratatui** - Terminal UI framework
 - **clap** - CLI argument parsing
 - **tokio** - Async runtime
 - **serde** - Serialization
 
+**Python Bindings:**
+- **PyO3** - Rust-Python interop
+- **maturin** - Build and publish Python packages with Rust extensions
+
 ## Development
 
+### Rust Development
+
 ```bash
-# Build
-cargo build
+# Build Rust binary
+cargo build --release
 
 # Run tests
 cargo test
@@ -147,6 +184,41 @@ cargo fmt
 
 # Lint
 cargo clippy
+```
+
+### Python Development (with Rust backend)
+
+```bash
+# Install maturin
+pip install maturin
+
+# Build Python wheel with Rust extension
+maturin build --release
+
+# Develop locally (editable install)
+maturin develop
+
+# Build and test
+maturin develop && python -c "import procclean; print(procclean.get_memory())"
+```
+
+### Publishing
+
+**To PyPI:**
+```bash
+# Build wheel
+maturin build --release
+
+# Publish to PyPI
+maturin publish
+
+# Or publish to TestPyPI first
+maturin publish --repository testpypi
+```
+
+**To Crates.io:**
+```bash
+cargo publish
 ```
 
 ## License
