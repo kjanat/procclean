@@ -44,6 +44,26 @@ def get_cwd(pid: int) -> str:
         return "?"
 
 
+def is_exe_deleted(pid: int) -> bool:
+    """Check if process executable has been deleted or updated.
+
+    This happens when a package is updated while the process is running.
+    The process continues with the old binary in memory, but the exe symlink
+    shows "(deleted)" suffix.
+
+    Args:
+        pid: Process ID.
+
+    Returns:
+        True if the executable file was deleted/updated, False otherwise.
+    """
+    try:
+        exe_link = Path(f"/proc/{pid}/exe").readlink()
+        return str(exe_link).endswith("(deleted)")
+    except (PermissionError, FileNotFoundError, ProcessLookupError):
+        return False
+
+
 def get_process_list(
     sort_by: str = "memory",
     filter_user: str | None = None,
@@ -93,19 +113,22 @@ def get_process_list(
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 parent_name = "?"
 
-            # Check if orphaned (parent is init/systemd)
-            is_orphan = ppid == 1 or parent_name in {"systemd", "init"}
+            # Check if orphaned (reparented to PID 1 system init)
+            # Note:
+            #   ppid != 1 with parent "systemd" means user session service, NOT orphan
+            is_orphan = ppid == 1
 
             cmdline = " ".join(info["cmdline"] or [])[:200]
             if not cmdline:
                 cmdline = info["name"]
 
+            pid = info["pid"]
             processes.append(
                 ProcessInfo(
-                    pid=info["pid"],
+                    pid=pid,
                     name=info["name"],
                     cmdline=cmdline,
-                    cwd=get_cwd(info["pid"]),
+                    cwd=get_cwd(pid),
                     ppid=ppid,
                     parent_name=parent_name,
                     rss_mb=rss_mb,
@@ -113,8 +136,9 @@ def get_process_list(
                     username=info["username"],
                     create_time=info["create_time"] or 0,
                     is_orphan=is_orphan,
-                    in_tmux=get_tmux_env(info["pid"]) if is_orphan else False,
+                    in_tmux=get_tmux_env(pid) if is_orphan else False,
                     status=info["status"] or "?",
+                    exe_deleted=is_exe_deleted(pid),
                 )
             )
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
