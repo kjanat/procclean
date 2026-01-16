@@ -194,10 +194,7 @@ class ProcessCleanerApp(App):
             return [p for p in self.processes if p.rss_mb > HIGH_MEMORY_THRESHOLD_MB]
         if self.current_view == "groups":
             groups = find_similar_processes(self.processes)
-            procs: list[ProcessInfo] = []
-            for group_procs in groups.values():
-                procs.extend(group_procs)
-            return procs
+            return [p for group in groups.values() for p in group]
         return list(self.processes)
 
     @staticmethod
@@ -212,9 +209,12 @@ class ProcessCleanerApp(App):
             return
         for row_idx in range(table.row_count):
             row_data = table.get_row_at(row_idx)
-            if int(row_data[1]) == cursor_pid:
-                table.move_cursor(row=row_idx)
-                break
+            try:
+                if int(row_data[1]) == cursor_pid:
+                    table.move_cursor(row=row_idx)
+                    break
+            except (ValueError, IndexError):
+                continue
 
     def update_table(self) -> None:
         """Update the process table based on current view and sort."""
@@ -297,13 +297,16 @@ class ProcessCleanerApp(App):
     @on(DataTable.HeaderSelected, "#process-table")
     def on_header_clicked(self, event: DataTable.HeaderSelected) -> None:
         """Sort by column when header is clicked."""
-        # Map column index to sort key
+        # Map column index to sort key.
+        # Sortable: PID(1), Name(2), RAM(3), CPU(4), CWD(5)
+        # Not sortable (no-op): Selection(0), Status(6) - clicking does nothing
+        # NOTE: Indexes must be updated if column order changes in update_table()
         column_sort_map: dict[int, SortKey] = {
-            1: "pid",  # PID column
-            2: "name",  # Name column
-            3: "memory",  # RAM (MB) column
-            4: "cpu",  # CPU% column
-            5: "cwd",  # CWD column
+            1: "pid",
+            2: "name",
+            3: "memory",
+            4: "cpu",
+            5: "cwd",
         }
         col_idx = event.column_index
         if col_idx in column_sort_map:
