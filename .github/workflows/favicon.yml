@@ -27,10 +27,15 @@ jobs:
 
       - name: Convert SVG to ICO
         run: |
+          set -euo pipefail
           mkdir -p docs/assets/images
           convert -background none logo/icon.svg \
             -define icon:auto-resize=256,128,64,48,32,16 \
             docs/assets/images/favicon.ico
+          if [ ! -s docs/assets/images/favicon.ico ]; then
+            echo "::error file=docs/assets/images/favicon.ico::is empty."
+            exit 1
+          fi
           cp docs/assets/images/favicon.ico docs/favicon.ico
 
       - name: Check for changes
