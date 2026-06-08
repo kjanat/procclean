@@ -21,9 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
       - name: Sync labels
-        uses: kjanat/github-labelmanager@v2
+        uses: kjanat/github-labelmanager@611e47cf63c91530ded1c82400ca45f265b7c2dd # v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
