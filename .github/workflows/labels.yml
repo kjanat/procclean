@@ -24,6 +24,6 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Sync labels
-        uses: kjanat/github-labelmanager@v1
+        uses: kjanat/github-labelmanager@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
