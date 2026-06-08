@@ -53,7 +53,7 @@ jobs:
         run: uv build --no-sources
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
@@ -71,13 +71,13 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: dist
           path: dist/
 
       - name: Generate attestations
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: dist/*
 

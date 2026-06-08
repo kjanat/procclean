@@ -14,7 +14,6 @@ error-on-warning = false
 # Strict type checking - all available rules configured
 # Error-level rules (will fail CI)
 ambiguous-protocol-member = "error"
-byte-string-type-annotation = "error"
 call-non-callable = "error"
 call-top-callable = "error"
 conflicting-argument-forms = "error"
@@ -25,7 +24,6 @@ cyclic-type-alias-definition = "error"
 duplicate-base = "error"
 duplicate-kw-only = "error"
 escape-character-in-forward-annotation = "error"
-fstring-type-annotation = "error"
 implicit-concatenated-string-type-annotation = "error"
 inconsistent-mro = "error"
 index-out-of-bounds = "error"
