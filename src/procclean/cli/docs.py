@@ -150,8 +150,12 @@ def _extract_h2_sections(
     h2_starts: list[tuple[str, int]] = []
     for i, token in enumerate(tokens):
         if token.type == "heading_open" and token.tag == "h2":
+            # heading_open tokens always carry a source map; skip if absent
+            # rather than defaulting to 0, which would collapse section ranges.
+            if token.map is None:
+                continue
             title = tokens[i + 1].content
-            start_line = token.map[0] if token.map else 0
+            start_line = token.map[0]
             h2_starts.append((title, start_line))
 
     h2_sections: list[tuple[str, int, int]] = []
